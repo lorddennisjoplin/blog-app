@@ -102,7 +102,7 @@ module.exports.updateBlogPost = async (req, res) => {
     }
 
     // Authorization check
-    const isOwner = blog.author.toString() === req.user._id.toString();
+    const isOwner = blog.author.toString() === req.user.id.toString();
     if (!isOwner) {
       return res.status(403).json({
         message: "Forbidden: You are not allowed to update this blog post.",
@@ -186,7 +186,7 @@ module.exports.addBlogComment = async (req, res) => {
 
     // Add comment
     blog.comments.push({
-      userId: req.user._id, // use _id
+      userId: req.user.id,
       comment: comment.trim()
     });
 
