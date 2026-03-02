@@ -24,7 +24,7 @@
           <template v-if="auth.isAuthenticated">
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/blogs">
+              <RouterLink class="nav-link" to="/posts">
                 <i class="bi bi-journal-text"></i> All Blogs
               </RouterLink>
             </li>
@@ -32,14 +32,14 @@
             <li v-if="auth.user" class="nav-item">
 						  <RouterLink
 						    class="nav-link"
-						    :to="`/blogs/user/${auth.user.username}`"
+						    :to="`/posts/user/${auth.user.username}`"
 						  >
 						    <i class="bi bi-pencil"></i> My Posts
 						  </RouterLink>
 						</li>
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/blogs/add">
+              <RouterLink class="nav-link" to="/posts/add">
                 <i class="bi bi-plus-circle"></i> Add Post
               </RouterLink>
             </li>

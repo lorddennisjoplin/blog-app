@@ -72,7 +72,7 @@ const handleLogin = async () => {
     }
 
     // Redirect after login
-    router.push("/blogs")
+    router.push("/posts")
   } catch (err) {
     error.value = err?.response?.data?.message || err.message || "Log in failed."
   } finally {
