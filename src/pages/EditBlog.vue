@@ -8,7 +8,7 @@
 
     <div v-else>
 
-      <!-- OWNER //-->
+      <!-- OWNER EDIT FORM -->
       <div v-if="isOwner && isEditRoute" class="card p-4 mt-3">
         <h1 class="mb-3">Edit Post</h1>
 
@@ -35,6 +35,7 @@
 
           <!-- Tiptap Toolbar -->
           <div v-if="editor" class="mb-2">
+
             <!-- Headings -->
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">H2</button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">H3</button>
@@ -45,9 +46,22 @@
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleItalic().run()"><em>I</em></button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleStrike().run()"><s>S</s></button>
 
+            <!-- Links -->
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+              @click="addLink"
+            >
+              🔗 Link
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+              @click="editor.chain().focus().unsetLink().run()"
+            >
+              ❌ Remove Link
+            </button>
+
             <!-- Lists -->
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
+
           </div>
 
           <!-- Tiptap Editor -->
@@ -86,15 +100,13 @@
         </form>
       </div>
 
-      <!-- VIEW MODE //-->
+      <!-- VIEW MODE -->
       <div v-else-if="blog" class="card shadow-sm p-4 mt-3 col-md-8 mx-auto">
 
         <h1 class="card-title mb-2">{{ blog.title }}</h1>
 
         <p class="fw-bold text-muted mb-2">
-          By {{ blog.author?.username || 'Unknown' }}
-          &bull;
-          {{ formattedDate }}
+          By {{ blog.author?.username || 'Unknown' }} &bull; {{ formattedDate }}
         </p>
 
         <a
@@ -131,6 +143,7 @@ import api from '../services/api.js'
 
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
+import Link from '@tiptap/extension-link'
 
 // Router & Store
 const route = useRoute()
@@ -151,35 +164,49 @@ const form = reactive({
   featuredImage: ''
 })
 
-// Tiptap
+// Tiptap Editor
 const editor = useEditor({
-  extensions: [StarterKit],
+  extensions: [
+    StarterKit,
+    Link.configure({
+      openOnClick: true,
+      autolink: true,
+      linkOnPaste: true,
+      HTMLAttributes: {
+        target: '_blank',
+        rel: 'nofollow ugc noopener',
+      }
+    })
+  ],
   content: '',
   onUpdate: ({ editor }) => {
     form.content = editor.getHTML()
   }
 })
 
-// Computed
-const isEditRoute = computed(() =>
-  route.path.includes('/edit/')
-)
+// Add link function
+const addLink = () => {
+  const url = window.prompt('Enter URL')
+  if (url && editor.value) {
+    editor.value.chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: url, target: '_blank', rel: 'nofollow ugc noopener' })
+      .run()
+  }
+}
 
+// Computed
+const isEditRoute = computed(() => route.path.includes('/edit/'))
 const isOwner = computed(() =>
   auth.user &&
   blog.value &&
   blog.value.author &&
   blog.value.author._id === auth.user._id
 )
-
 const formattedDate = computed(() => {
   if (!blog.value?.createdAt) return ''
-  const date = new Date(blog.value.createdAt)
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
+  return new Date(blog.value.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 })
 
 // Load blog
@@ -188,12 +215,9 @@ const loadBlog = async (id) => {
   try {
     const res = await api.get(`/blogs/post/${id}`)
     blog.value = res.data.blog
-
     Object.assign(form, res.data.blog)
 
-    if (editor.value) {
-      editor.value.commands.setContent(res.data.blog.content || '')
-    }
+    if (editor.value) editor.value.commands.setContent(res.data.blog.content || '')
 
   } catch (err) {
     console.error(err)
@@ -202,37 +226,38 @@ const loadBlog = async (id) => {
   }
 }
 
-onMounted(() => {
-  loadBlog(route.params.id)
-})
-
-watch(() => route.params.id, (newId) => {
-  if (newId) loadBlog(newId)
-})
-
-onBeforeUnmount(() => {
-  if (editor.value) {
-    editor.value.destroy()
-  }
-})
+onMounted(() => loadBlog(route.params.id))
+watch(() => route.params.id, (newId) => { if (newId) loadBlog(newId) })
+onBeforeUnmount(() => { if (editor.value) editor.value.destroy() })
 
 // Navigation
-const editBlog = (id) => {
-  router.push(`/blogs/edit/${id}`)
-}
+const editBlog = (id) => router.push(`/blogs/edit/${id}`)
 
-// Save
+// Save updates
 const handleEditBlog = async () => {
   try {
     editing.value = true
 
-    await api.patch(`/blogs/edit/${route.params.id}`, form)
+    const res = await api.patch(`/blogs/edit/${route.params.id}`, form)
 
     message.value = "Blog updated successfully."
     messageType.value = "success"
 
+    // Update local blog object immediately with populated author
+    if (res.data.updatedBlog) {
+      blog.value = res.data.updatedBlog
+      form.title = blog.value.title
+      form.content = blog.value.content
+      form.featuredImage = blog.value.featuredImage
+
+      if (editor.value) {
+        editor.value.commands.setContent(blog.value.content || '')
+      }
+    }
+
+    // Optional: redirect after 1.5s
     setTimeout(() => {
-      router.push("/blogs")
+      router.push(`/blogs/post/${route.params.id}`)
     }, 1500)
 
   } catch (err) {

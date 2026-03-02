@@ -3,16 +3,10 @@ const { errorHandler } = require('../auth');
 
 module.exports.addBlogPost = async (req, res) => {
   try {
-    console.log("===== ADD BLOG DEBUG START =====");
-    console.log("Request Body:", req.body);
-    console.log("Request User:", req.user);
-    console.log("================================");
-
     const { title, content, featuredImage } = req.body;
 
     // Field validation
     if (!title || !content || !featuredImage) {
-      console.log("Validation failed: Missing required fields");
       return res.status(400).json({
         message: "All fields are required."
       });
@@ -21,7 +15,6 @@ module.exports.addBlogPost = async (req, res) => {
     // Image extension validation
     const validExtensions = /\.(jpg|jpeg|png|gif|svg|webp)$/i;
     if (!validExtensions.test(featuredImage)) {
-      console.log("Validation failed: Invalid image extension");
       return res.status(400).json({
         message:
           "Invalid image. Accepted extensions: .jpg, .jpeg, .png, .gif, .svg, .webp",
@@ -30,7 +23,6 @@ module.exports.addBlogPost = async (req, res) => {
 
     // Authorisation check
     if (!req.user || !req.user.id) {
-      console.log("Auth failed: req.user missing or invalid");
       return res.status(401).json({
         message: "Unauthorized. User not found in request."
       });
@@ -43,16 +35,8 @@ module.exports.addBlogPost = async (req, res) => {
       author: req.user.id
     });
 
-    console.log("Blog created successfully:", newBlog._id);
-    console.log("===== ADD BLOG DEBUG END =====");
-
     return res.status(201).json(newBlog);
-
   } catch (error) {
-    console.error("🔥 BLOG CREATION ERROR:");
-    console.error(error);
-    console.error("Stack:", error.stack);
-
     return res.status(500).json({
       message: error.message
     });
@@ -92,6 +76,11 @@ module.exports.getBlogPostById = (req, res) => {
       .catch(error => errorHandler(error, req, res));
 };
 
+// controllers/blogController.js
+
+const Blog = require('../models/Blog'); // adjust path if needed
+const errorHandler = require('../utils/errorHandler'); // your error handler
+
 module.exports.updateBlogPost = async (req, res) => {
   try {
     if (!req.user) {
@@ -103,11 +92,9 @@ module.exports.updateBlogPost = async (req, res) => {
     // Validate image extension if provided
     if (featuredImage) {
       const validExtensions = /\.(jpg|jpeg|png|gif|svg|webp)$/i;
-
       if (!validExtensions.test(featuredImage)) {
         return res.status(400).json({
-          message:
-            "Invalid image. Accepted extensions: .jpg, .jpeg, .png, .gif, .svg, .webp",
+          message: "Invalid image. Accepted extensions: .jpg, .jpeg, .png, .gif, .svg, .webp",
         });
       }
     }
@@ -120,8 +107,7 @@ module.exports.updateBlogPost = async (req, res) => {
     }
 
     // Authorization check
-    const isOwner = blog.author.toString() === req.user.id.toString();
-
+    const isOwner = blog.author.toString() === req.user._id.toString();
     if (!isOwner) {
       return res.status(403).json({
         message: "Forbidden: You are not allowed to update this blog post.",
@@ -129,17 +115,14 @@ module.exports.updateBlogPost = async (req, res) => {
     }
 
     // Prepare update object
-    const updatedBlog = {
-      title,
-      content,
-      featuredImage,
-    };
+    const updatedBlog = { title, content, featuredImage };
 
+    // Update blog and populate author
     const result = await Blog.findByIdAndUpdate(
       req.params.blogId,
       updatedBlog,
       { new: true, runValidators: true }
-    );
+    ).populate('author', 'username'); // <-- populate only username
 
     return res.status(200).json({
       message: "Blog post updated successfully.",
@@ -187,7 +170,6 @@ module.exports.deleteBlogPost = async (req, res) => {
     return res.status(200).json({ message: "Blog post deleted successfully." });
 
   } catch (error) {
-    console.error("Delete Blog Error:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
 };
