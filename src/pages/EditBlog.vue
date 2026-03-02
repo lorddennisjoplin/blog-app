@@ -64,7 +64,7 @@
             <span v-else>Save Changes</span>
           </button>
 
-          <button type="button" class="btn btn-secondary btn-sm" @click="router.push(`/blogs/post/${route.params.id}`)">
+          <button type="button" class="btn btn-secondary btn-sm" @click="router.push(`/posts/view/${route.params.id}`)">
             Cancel
           </button>
         </form>
@@ -225,7 +225,7 @@ const formatDate = (isoString) => {
 const loadBlog = async (id) => {
   loading.value = true
   try {
-    const res = await api.get(`/blogs/post/${id}`)
+    const res = await api.get(`/posts/view/${id}`)
     blog.value = res.data.blog
 
     // **Assign directly, do not use .value**
@@ -250,13 +250,13 @@ watch(() => route.params.id, (newId) => { if (newId) loadBlog(newId) })
 onBeforeUnmount(() => { if (editor.value) editor.value.destroy() })
 
 // Navigation
-const editBlog = (id) => router.push(`/blogs/edit/${id}`)
+const editBlog = (id) => router.push(`/posts/edit/${id}`)
 
 // Save updates
 const handleEditBlog = async () => {
   try {
     editing.value = true
-    const res = await api.patch(`/blogs/edit/${route.params.id}`, form)
+    const res = await api.patch(`/posts/edit/${route.params.id}`, form)
 
     message.value = "Blog updated successfully."
     messageType.value = "success"
@@ -271,7 +271,7 @@ const handleEditBlog = async () => {
     }
 
     setTimeout(() => {
-      router.push(`/blogs/post/${route.params.id}`)
+      router.push(`/posts/view/${route.params.id}`)
     }, 1500)
 
   } catch (err) {
@@ -289,7 +289,7 @@ const newComment = ref('')
 
 const fetchComments = async (postId) => {
   try {
-    const res = await api.get(`/blogs/getComments/${postId}`)
+    const res = await api.get(`/posts/getComments/${postId}`)
     comments.value = res.data.comments || []
   } catch (err) {
     console.error('Failed to fetch comments:', err)
@@ -300,7 +300,7 @@ const submitComment = async () => {
   if (!newComment.value.trim()) return
   try {
     const res = await api.post(
-      `/blogs/addComment/${blog.value._id}`,
+      `/posts/addComment/${blog.value._id}`,
       { comment: newComment.value },
       { headers: { Authorization: `Bearer ${auth.token}` } }
     )
@@ -316,7 +316,7 @@ const deleteComment = async (commentId) => {
   if (!confirm("Are you sure you want to delete this comment?")) return
 
   try {
-    await api.delete(`/blogs/deleteComment/${commentId}`, {
+    await api.delete(`/posts/deleteComment/${commentId}`, {
       headers: { Authorization: `Bearer ${auth.token}` }
     })
 

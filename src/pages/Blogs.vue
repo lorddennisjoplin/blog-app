@@ -25,7 +25,7 @@
                   By
                   <RouterLink 
                     v-if="blog.author?.username" 
-                    :to="`/blogs/user/${blog.author.username}`" 
+                    :to="`/posts/user/${blog.author.username}`" 
                     class="text-decoration-none fw-bold"
                   >
                   {{ blog.author?.username || 'Unknown' }}
@@ -182,11 +182,11 @@ watch(() => route.params.username, () => {
 const fetchBlogs = async () => {
   loading.value = true
   try {
-    let url = "/blogs/all"
+    let url = "/posts/all"
 
     if (username.value) {
       // Fetch blogs of a specific user
-      url = `/blogs/user/${username.value}`
+      url = `/posts/user/${username.value}`
     }
 
     const res = await api.get(url) // API should populate author
@@ -221,13 +221,13 @@ const cancelForm = () => {
 }
 
 // Actions
-const goToBlog = (id) => router.push(`/blogs/post/${id}`)
-const editBlog = (id) => router.push(`/blogs/edit/${id}`)
+const goToBlog = (id) => router.push(`/posts/view/${id}`)
+const editBlog = (id) => router.push(`/posts/edit/${id}`)
 
 const DeleteBlog = async (blogId) => {
   try {
     if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
-    await api.delete(`/blogs/delete/${blogId}`);
+    await api.delete(`/posts/delete/${blogId}`);
     console.log(blogId);
     blogs.value = blogs.value.filter(w => w._id !== blogId);
     message.value = "Blog post deleted successfully.";

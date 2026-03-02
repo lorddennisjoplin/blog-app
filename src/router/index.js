@@ -11,13 +11,13 @@ import EditBlog from "../pages/EditBlog.vue";
 const routes = [
   { path: "/login", component: Login },
   { path: "/register", component: Register },
-  { path: "/blogs", component: Blogs },
-  { path: "/blogs/add", component: AddBlog },
-  { path: "/blogs/user/:username?", component: Blogs },
-  { path: "/blogs/post/:id", component: EditBlog },
-  { path: "/blogs/edit/:id", component: EditBlog },
+  { path: "/posts", component: Blogs },
+  { path: "/posts/add", component: AddBlog },
+  { path: "/posts/user/:username?", component: Blogs },
+  { path: "/posts/view/:id", component: EditBlog },
+  { path: "/posts/edit/:id", component: EditBlog },
   // { path: "/user", component: User },
-  { path: "/", redirect: "/blogs" },
+  { path: "/", redirect: "/posts" },
 ];
 
 const router = createRouter({
@@ -30,10 +30,10 @@ router.beforeEach((to, from, next) => {
 
   // // If already logged in, just go to /products
   if (auth.isAuthenticated && (to.path === "/login" || to.path === "/register")) {
-    return next("/blogs");
+    return next("/posts");
   }
 
-  const protectedRoutes = ["/blogs/blog"];
+  const protectedRoutes = ["/posts/blog"];
 
   if (
     !auth.isAuthenticated &&

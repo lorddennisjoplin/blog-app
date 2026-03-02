@@ -165,9 +165,9 @@ const cancelForm = () => {
 
   // Navigate to user's posts
   if (auth.user?.username) {
-    router.push(`/blogs/user/${auth.user.username}`)
+    router.push(`/posts/user/${auth.user.username}`)
   } else {
-    router.push('/blogs/all')
+    router.push('/posts/all')
   }
 }
 
@@ -180,7 +180,7 @@ const handleAddBlog = async () => {
 
   try {
     adding.value = true
-    const res = await api.post('/blogs/add', form, {
+    const res = await api.post('/posts/add', form, {
       headers: { Authorization: `Bearer ${auth.token}` }
     })
     const newBlog = res.data
@@ -189,7 +189,7 @@ const handleAddBlog = async () => {
     messageType.value = 'success'
 
     setTimeout(() => {
-      router.push(`/blogs/post/${newBlog._id}`)
+      router.push(`/posts/view/${newBlog._id}`)
     }, 1500)
 
   } catch (err) {
@@ -201,7 +201,7 @@ const handleAddBlog = async () => {
 }
 
 // ----- Navigation -----
-const goToBlog = (id) => router.push(`/blogs/blog/${id}`)
+const goToBlog = (id) => router.push(`/posts/view/${id}`)
 
 // ----- Mounted -----
 onMounted(async () => {

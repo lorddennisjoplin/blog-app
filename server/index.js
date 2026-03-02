@@ -22,7 +22,7 @@ const userRoutes = require("./routes/user");
 const blogRoutes = require("./routes/blog");
 
 app.use("/users", userRoutes);
-app.use("/blogs", blogRoutes);
+app.use("/posts", blogRoutes);
 
 // Start server
 const port = process.env.PORT || 4000;
