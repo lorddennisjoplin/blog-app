@@ -10,7 +10,7 @@ module.exports.addBlogPost = async (req, res) => {
 
     const { title, content, featuredImage } = req.body;
 
-    // 🔹 Required field validation
+    // Field validation
     if (!title || !content || !featuredImage) {
       console.log("Validation failed: Missing required fields");
       return res.status(400).json({
@@ -18,7 +18,7 @@ module.exports.addBlogPost = async (req, res) => {
       });
     }
 
-    // 🔹 Image extension validation
+    // Image extension validation
     const validExtensions = /\.(jpg|jpeg|png|gif|svg|webp)$/i;
     if (!validExtensions.test(featuredImage)) {
       console.log("Validation failed: Invalid image extension");
@@ -28,7 +28,7 @@ module.exports.addBlogPost = async (req, res) => {
       });
     }
 
-    // 🔹 Auth check
+    // Authorisation check
     if (!req.user || !req.user._id) {
       console.log("Auth failed: req.user missing or invalid");
       return res.status(401).json({
@@ -36,12 +36,11 @@ module.exports.addBlogPost = async (req, res) => {
       });
     }
 
-    // 🔹 Create blog
     const newBlog = await Blog.create({
       title,
       content,
       featuredImage,
-      author: req.user._id
+      author: req.user.id
     });
 
     console.log("Blog created successfully:", newBlog._id);
