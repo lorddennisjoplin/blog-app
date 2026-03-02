@@ -159,16 +159,21 @@ module.exports.deleteBlogPost = async (req, res) => {
 
     const blogId = req.params.blogId;
 
+    // Validate ObjectId first
+    if (!blogId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid blog post ID." });
+    }
+
     // Find the blog first
-    const blog = await Blog.findById(blogId);
+    const blog = await Blog.findById(blogId).exec();
 
     if (!blog) {
       return res.status(404).json({ message: "Blog post not found." });
     }
 
     // Authorization check
-    const isAdmin = req.user.isAdmin;
-    const isOwner = blog.author.toString() === req.user._id.toString();
+    const isAdmin = !!req.user.isAdmin;
+    const isOwner = blog.author?.toString() === req.user._id.toString();
 
     if (!isAdmin && !isOwner) {
       return res.status(403).json({
@@ -177,15 +182,13 @@ module.exports.deleteBlogPost = async (req, res) => {
     }
 
     // Delete the blog
-    await Blog.findByIdAndDelete(blogId);
+    await Blog.findByIdAndDelete(blogId).exec();
 
     return res.status(200).json({ message: "Blog post deleted successfully." });
 
   } catch (error) {
-    if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid blog post ID." });
-    }
-    return errorHandler(error, req, res);
+    console.error("Delete Blog Error:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
 

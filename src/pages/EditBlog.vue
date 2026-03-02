@@ -26,7 +26,7 @@
         <form @submit.prevent="handleEditBlog">
           <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
           <textarea v-model="form.content" class="form-control mb-2" placeholder="Description" required></textarea>
-          <input v-model="form.image" type="url" class="form-control mb-2" placeholder="Poster URL" required />
+          <input v-model="form.featuredImage" type="url" class="form-control mb-2" placeholder="Featured Image URL" required />
 
           <button class="btn btn-primary btn-sm me-2" :disabled="editing">
             <span v-if="editing">
