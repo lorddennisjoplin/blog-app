@@ -3,20 +3,40 @@ const { errorHandler } = require('../auth');
 
 module.exports.addBlogPost = async (req, res) => {
   try {
+    console.log("===== ADD BLOG DEBUG START =====");
+    console.log("Request Body:", req.body);
+    console.log("Request User:", req.user);
+    console.log("================================");
+
     const { title, content, featuredImage } = req.body;
 
-    // Validate image extension if provided
-    if (featuredImage) {
-      const validExtensions = /\.(jpg|jpeg|png|gif|svg|webp)$/i;
-
-      if (!validExtensions.test(featuredImage)) {
-        return res.status(400).json({
-          message:
-            "Invalid image. Accepted extensions: .jpg, .jpeg, .png, .gif, .svg, .webp",
-        });
-      }
+    // 🔹 Required field validation
+    if (!title || !content || !featuredImage) {
+      console.log("Validation failed: Missing required fields");
+      return res.status(400).json({
+        message: "All fields are required."
+      });
     }
 
+    // 🔹 Image extension validation
+    const validExtensions = /\.(jpg|jpeg|png|gif|svg|webp)$/i;
+    if (!validExtensions.test(featuredImage)) {
+      console.log("Validation failed: Invalid image extension");
+      return res.status(400).json({
+        message:
+          "Invalid image. Accepted extensions: .jpg, .jpeg, .png, .gif, .svg, .webp",
+      });
+    }
+
+    // 🔹 Auth check
+    if (!req.user || !req.user._id) {
+      console.log("Auth failed: req.user missing or invalid");
+      return res.status(401).json({
+        message: "Unauthorized. User not found in request."
+      });
+    }
+
+    // 🔹 Create blog
     const newBlog = await Blog.create({
       title,
       content,
@@ -24,9 +44,19 @@ module.exports.addBlogPost = async (req, res) => {
       author: req.user._id
     });
 
+    console.log("Blog created successfully:", newBlog._id);
+    console.log("===== ADD BLOG DEBUG END =====");
+
     return res.status(201).json(newBlog);
+
   } catch (error) {
-    return errorHandler(error, req, res);
+    console.error("🔥 BLOG CREATION ERROR:");
+    console.error(error);
+    console.error("Stack:", error.stack);
+
+    return res.status(500).json({
+      message: error.message
+    });
   }
 };
 

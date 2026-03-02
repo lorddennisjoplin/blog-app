@@ -31,6 +31,12 @@
 		    </li>
 
 		    <li class="nav-item">
+		      <RouterLink class="nav-link" to="/blogs/add">
+		        <i class="bi bi-plus-circle"></i> Add Post
+		      </RouterLink>
+		    </li>
+
+		    <li class="nav-item">
 		      <a class="nav-link text-danger" href="#" @click.prevent="logout">
 		        <i class="bi bi-x-octagon"></i> Log out
 		      </a>

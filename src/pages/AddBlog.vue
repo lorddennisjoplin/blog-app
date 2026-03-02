@@ -1,7 +1,8 @@
 <template>
-	<div v-if="auth.user" class="card p-3 my-3 text-start">
-      <h2 class="mb-3">Add Blog</h2>
+  <div class="container my-5 text-start">
+    <h1 class="mb-4">Add Post</h1>
 
+    <div v-if="auth.user" class="card p-3 my-3 text-start">
       <!-- Success / Error Alert -->
       <div
         v-if="message && blogs.value?.length === 0"
@@ -14,97 +15,120 @@
       </div>
 
       <form @submit.prevent="handleAddBlog">
-        <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
-        <input v-model="form.director" type="text" class="form-control mb-2" placeholder="Director" required />
-        <input v-model="form.year" type="text" class="form-control mb-2" placeholder="Year" pattern="\d{4}" title="Year must be 4 digits" required />
-        <textarea v-model="form.description" class="form-control mb-2" placeholder="Description" required></textarea>
-        <input v-model="form.genre" type="text" class="form-control mb-2" placeholder="Genre" required />
-        <input v-model="form.image" type="url" class="form-control mb-2" placeholder="Poster URL" />
+        <input
+          v-model="form.title"
+          type="text"
+          class="form-control mb-2"
+          placeholder="Title"
+          required
+        />
 
-        <button type="submit" class="btn btn-sm btn-primary me-2" :disabled="adding">
+        <div class="mb-2">
+          <!-- Headings -->
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">H2</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">H3</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 4 }).run()">H4</button>
+
+          <!-- Text styles -->
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBold().run()">B</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleItalic().run()">I</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleStrike().run()">S</button>
+
+          <!-- Lists -->
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBulletList().run()">• List</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleOrderedList().run()">1. List</button>
+        </div>
+
+        <EditorContent :editor="editor" class="editor-content mb-2" required />
+
+        <input
+          v-model="form.featuredImage"
+          type="url"
+          class="form-control mb-2"
+          placeholder="Featured Image URL"
+          required
+        />
+
+        <button
+          type="submit"
+          class="btn btn-sm btn-primary me-2"
+          :disabled="adding"
+        >
           <span v-if="adding">
             <span class="spinner-border spinner-border-sm me-1"></span>
             Adding...
           </span>
           <span v-else>
-            Save
+            Publish
           </span>
         </button>
 
-        <button type="button" class="btn btn-sm btn-secondary me-2" @click="cancelForm" :disabled="adding">
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary me-2"
+          @click="cancelForm"
+          :disabled="adding"
+        >
           Cancel
         </button>
       </form>
     </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import api from '../services/api.js'; 
+import api from '../services/api.js'
 
+// ----- User & Router -----
 const auth = useUserStore()
 const router = useRouter()
 
-// Message system
-const showForm = ref(false)
+// ----- Form & Messages -----
 const message = ref('')
 const messageType = ref('success')
 const adding = ref(false)
 
 const form = reactive({
   title: '',
-  director: '',
-  year: '',
-  description: '',
-  genre: '',
-  image: ''
+  content: '',          // WYSIWYG content
+  featuredImage: ''
 })
 
-// Blogs
+// ----- Blogs -----
 const blogs = ref([])
 const loading = ref(true)
+const currentPage = ref(1)
 
-// Fetch blogs
-const fetchBlogs = async () => {
-  loading.value = true
-  try {
-    const res = await api.get("/blogs/getBlogs")
+// ----- Tiptap WYSIWYG Editor -----
+import { Editor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
 
-    const fetched = res.data.blogs || []
-
-    fetched.sort((a, b) => b._id.localeCompare(a._id))
-
-    blogs.value = fetched
-
-    message.value = ""
-  } catch (err) {
-    console.error(err)
-    blogs.value = []
-    message.value = err.response?.data?.message || "Failed to fetch blogs."
-    messageType.value = "error"
-  } finally {
-    loading.value = false
+const editor = new Editor({
+  extensions: [StarterKit],
+  content: '',
+  onUpdate({ editor }) {
+    form.content = editor.getHTML()
   }
-}
+})
 
-// Add blog
+// Destroy editor instance on unmount
+onBeforeUnmount(() => {
+  editor.destroy()
+})
+
+// ----- Add Blog -----
 const handleAddBlog = async () => {
   try {
     adding.value = true
-    const res = await api.post('/blogs/addBlog', form)
-
-    blogs.value.unshift(res.data)
-    currentPage.value = 1
-
-    cancelForm()
-
-    message.value = 'Blog added successfully.'
+    const res = await api.post('/blogs/add', form, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    });
+    message.value = 'Blog added successfully. Redirecting...'
     messageType.value = 'success'
-
     setTimeout(() => message.value = '', 1500)
-
   } catch (err) {
     message.value = err.response?.data?.message || err.message
     messageType.value = 'error'
@@ -113,13 +137,20 @@ const handleAddBlog = async () => {
   }
 }
 
+// ----- Cancel Form -----
 const cancelForm = () => {
-  Object.assign(form, { name: '', duration: '' })
-  showForm.value = false
+  Object.assign(form, {
+    title: '',
+    content: '',
+    featuredImage: ''
+  })
+  editor.commands.clearContent()
 }
 
+// ----- Navigation -----
 const goToBlog = (id) => router.push(`/blogs/blog/${id}`)
 
+// ----- Mounted -----
 onMounted(async () => {
   if (auth.token && !auth.user) {
     try {
@@ -127,11 +158,40 @@ onMounted(async () => {
         headers: { Authorization: `Bearer ${auth.token}` }
       })
       auth.setUser(res.data.user)
+
+      console.log(res.data.user)
+
     } catch (err) {
       console.error("Failed to fetch user:", err)
     }
   }
-
-  fetchBlogs()
 })
 </script>
+
+<style>
+/* Optional: set min-height for editor */
+.editor-content {
+  min-height: 150px;
+}
+
+.editor-content {
+  min-height: 150px;
+  border: 1px solid #ced4da;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Tiptap uses ProseMirror */
+/* Make the inner editable div fill the container */
+.ProseMirror {
+  min-height: 150px !important;        /* initial height */
+  outline: none !important;
+  box-shadow: none !important;
+  /*border: 1px solid #ced4da;*/
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+</style>

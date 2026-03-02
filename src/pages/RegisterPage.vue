@@ -70,7 +70,7 @@ const handleRegister = async () => {
 
   try {
     const res = await api.post("/users/register", {
-      name: form.name,
+      username: form.username,
       email: form.email,
       password: form.password
     })

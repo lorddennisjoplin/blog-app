@@ -66,7 +66,7 @@ const handleLogin = async () => {
     // Optionally store user info
     auth.setUser(res.data.user)
 
-    router.push("/movies")
+    router.push("/blogs")
   } catch (err) {
     error.value = err?.response?.data?.message || err.message || "Log in failed."
   } finally {
