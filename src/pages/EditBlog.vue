@@ -75,7 +75,15 @@
         <div class="col-lg-9 col-12">
           <h1 class="mb-2">{{ blog.title }}</h1>
           <p class="fw-bold text-muted mb-2">
-            By {{ blog.author?.username || 'Unknown' }} &bull; {{ formattedDate }}
+            By
+            <RouterLink 
+                    v-if="blog.author?.username" 
+                    :to="`/posts/user/${blog.author.username}`" 
+                    class="text-decoration-none fw-bold"
+                  >
+                  {{ blog.author?.username || 'Unknown' }}
+                  </RouterLink>
+            &bull; {{ formattedDate }}
             <span v-if="isOwner" class="ms-2">
               &bull;
               <a href="#" @click.prevent="editBlog(blog._id)" class="text-warning text-decoration-none ms-2">Edit Post</a>

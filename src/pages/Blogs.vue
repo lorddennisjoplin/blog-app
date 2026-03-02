@@ -32,8 +32,8 @@
                     class="text-decoration-none fw-bold"
                   >
                   {{ blog.author?.username || 'Unknown' }}
-                </RouterLink>
-                &bull; {{ blog.formattedDate }}
+                  </RouterLink>
+                  &bull; {{ blog.formattedDate }}
                 </p>
                 <p class="my-3">{{ stripAndTruncate(blog.content, 150) }}</p>
 
