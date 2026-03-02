@@ -8,7 +8,7 @@
 
     <div v-else>
       <!-- OWNER EDIT FORM -->
-      <div v-if="isOwner && isEditRoute" class="p-4 mt-3">
+      <div v-if="isOwner && isEditRoute">
         <h1 class="mb-3">Edit Your Post</h1>
 
         <div
@@ -104,9 +104,9 @@
           <!-- Comments Section -->
           <div class="my-5">
             <hr class="mb-5">
-            <h2 class="mb-3">Comments</h2>
+            <h2 class="mb-3" id="comments">Comments</h2>
 
-            <div v-if="auth.user" class="mb-4">
+            <div v-if="auth.token" class="mb-4">
               <form @submit.prevent="submitComment">
                 <div class="mb-2">
                   <textarea v-model="newComment" class="form-control" rows="3" placeholder="Write a comment..." required></textarea>
@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../services/api.js'
@@ -172,11 +172,29 @@ const editing = ref(false)
 const message = ref('')
 const messageType = ref('')
 
-// Form (reactive) — **DO NOT USE .value**
+// Form (reactive)
 const form = reactive({
   title: '',
   content: '',
   featuredImage: ''
+})
+
+const scrollToHash = async (hash) => {
+  if (!hash) return
+  await nextTick() // wait for DOM update
+  const el = document.querySelector(hash)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
+watch(() => route.hash, (newHash) => scrollToHash(newHash))
+
+watch(blog, async (newBlog) => {
+  if (newBlog) {
+    await nextTick()
+    scrollToHash(route.hash)
+  }
 })
 
 // Editor
@@ -306,11 +324,12 @@ const fetchComments = async (postId) => {
 
 const submitComment = async () => {
   if (!newComment.value.trim()) return
+    console.log('Posting with token:', auth.token)
   try {
     const res = await api.post(
       `/posts/addComment/${blog.value._id}`,
       { comment: newComment.value },
-      { headers: { Authorization: `Bearer ${auth.token}` } }
+      { headers: { Authorization: `Bearer ${auth.token}` } } // uppercase A ✅
     )
     comments.value.push(res.data.comment)
     newComment.value = ''
@@ -335,4 +354,16 @@ const deleteComment = async (commentId) => {
     alert(err?.response?.data?.message || "Failed to delete comment")
   }
 }
+
+watch(
+  blog,
+  (newBlog) => {
+    if (newBlog && newBlog.title) {
+      document.title = `${newBlog.title} | Blog App`
+    } else {
+      document.title = "Loading... | Blog App"
+    }
+  },
+  { immediate: true }
+)
 </script>

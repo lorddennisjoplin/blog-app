@@ -210,13 +210,13 @@ module.exports.addBlogComment = async (req, res) => {
     }
 
     // Ensure req.user exists
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: "You must be logged in to comment." });
     }
 
     // Add comment
     const newComment = {
-      userId: req.user._id,
+      userId: req.user.id,
       comment: comment.trim()
     };
 

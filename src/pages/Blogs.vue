@@ -39,7 +39,9 @@
 
                 <!-- Buttons -->
                 <div class="mt-2">
-                  <i class="bi bi-chat"></i> Comment
+                  <a href="#" @click.prevent="scrollToComments(blog._id)" class="text-decoration-none text-dark">
+                    <i class="bi bi-chat"></i> {{ commentLabel(blog) }}
+                  </a>
                   <span v-if="auth.user && blog.author && blog.author._id === auth.user._id" class="ms-2">
                     &bull;
                   <a href="#"
@@ -91,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../services/api.js'; 
@@ -169,6 +171,20 @@ const stripAndTruncate = (html, maxLength) => {
   return truncated + '...'
 }
 
+// Scroll to comments
+const scrollToComments = async (id) => {
+  const currentPath = router.currentRoute.value.path
+
+  if (currentPath !== `/posts/view/${id}`) {
+    // Use object form for hash
+    router.push({ path: `/posts/view/${id}`, hash: '#comments' })
+  } else {
+    await nextTick()
+    const el = document.querySelector('#comments')
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
 // Computed for pagination
 const activeBlogs = computed(() => blogs.value.filter(p => p.isActive))
 const totalPages = computed(() => Math.ceil(blogs.value.length / itemsPerPage))
@@ -244,6 +260,12 @@ const DeleteBlog = async (blogId) => {
   }
 };
 
+const commentLabel = (blog) => {
+  const count = blog.comments?.length || 0
+  if (count === 0) return "Comment"
+  return `${count} Comment${count > 1 ? 's' : ''}`
+}
+
 // On mounted, fetch user details and blogs
 onMounted(async () => {
   if (auth.token && !auth.user) {
@@ -259,4 +281,8 @@ onMounted(async () => {
 
   fetchBlogs()
 })
+
+watch(() => route.params.username, (username) => {
+  document.title = username ? `${username}'s Posts | Blog App` : "All Posts | Blog App";
+}, { immediate: true });
 </script>

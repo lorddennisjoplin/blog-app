@@ -9,20 +9,42 @@ import EditBlog from "../pages/EditBlog.vue";
 // import User from "../pages/User.vue";
 
 const routes = [
-  { path: "/login", component: Login },
-  { path: "/register", component: Register },
-  { path: "/posts", component: Blogs },
-  { path: "/posts/add", component: AddBlog },
-  { path: "/posts/user/:username?", component: Blogs },
-  { path: "/posts/view/:id", component: EditBlog },
-  { path: "/posts/edit/:id", component: EditBlog },
-  // { path: "/user", component: User },
-  { path: "/", redirect: "/posts" },
+  { path: "/login", component: Login, meta: { title: "Login | Blog App" } },
+  { path: "/register", component: Register, meta: { title: "Register | Blog App" } },
+  { path: "/posts", component: Blogs, meta: { title: "All Posts | Blog App" } },
+  { path: "/posts/add", component: AddBlog, meta: { title: "Add Post | Blog App" } },
+  { path: "/posts/user/:username?", component: Blogs, meta: { title: "User's Posts | Blog App" } },
+  { path: "/posts/view/:id", component: EditBlog, meta: { title: "View Post | Blog App" } },
+  { path: "/posts/edit/:id", component: EditBlog, meta: { title: "Edit Your Post | Blog App" } },
+  // { path: "/user", component: User, meta: { title: "User Profile | Blog App" } },
+  { path: "/", redirect: "/posts", meta: { title: "All Posts | Blog App" } },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // If a hash is present, scroll to it
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: "smooth", // optional, smooth scroll
+      };
+    }
+    // If coming back with browser back/forward
+    if (savedPosition) {
+      return savedPosition;
+    }
+    // Default scroll
+    return { top: 0 };
+  },
+});
+
+router.afterEach((to) => {
+  if (to.meta.title && !to.meta.title.includes("{")) {
+    // static titles
+    document.title = to.meta.title;
+  }
 });
 
 router.beforeEach((to, from, next) => {
@@ -33,7 +55,7 @@ router.beforeEach((to, from, next) => {
     return next("/posts");
   }
 
-  const protectedRoutes = ["/posts/blog"];
+  const protectedRoutes = ["/posts/view","/posts/add","/posts/edit"];
 
   if (
     !auth.isAuthenticated &&

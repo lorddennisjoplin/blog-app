@@ -25,7 +25,7 @@
 
             <li class="nav-item">
               <RouterLink class="nav-link" to="/posts">
-                <i class="bi bi-journal-text"></i> All Blogs
+                <i class="bi bi-journal-text"></i> All Posts
               </RouterLink>
             </li>
 
