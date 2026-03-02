@@ -93,7 +93,7 @@
               <a href="#"><img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToBlog(blog._id)" /></a>
               <h3 class="card-title">{{ blog.title }}</h3>
               <h6 class="card-subtitle mb-3 text-muted">
-                By {{ blog.author?.username || 'Unknown' }}
+                By {{ blog.author?.username || 'Unknown' }} &bull; {{ blog.formattedDate }}
               </h6>
               <button class="btn btn-primary" @click="goToBlog(blog._id)">Read Post</button>
             </div>
@@ -122,11 +122,8 @@ const adding = ref(false)
 
 const form = reactive({
   title: '',
-  director: '',
-  year: '',
-  description: '',
-  genre: '',
-  image: ''
+  content: '',
+  featuredImage: ''
 })
 
 // Blogs
@@ -135,6 +132,18 @@ const loading = ref(true)
 const itemsPerPage = 10
 const currentPage = ref(1)
 
+// Helper to format dates
+const formatDate = (isoString) => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }) // e.g., "02 Mar 2026"
+}
+
+// Computed for pagination
 const activeBlogs = computed(() => blogs.value.filter(p => p.isActive))
 const totalPages = computed(() => Math.ceil(blogs.value.length / itemsPerPage))
 const paginatedBlogs = computed(() => {
@@ -142,21 +151,27 @@ const paginatedBlogs = computed(() => {
   return blogs.value.slice(start, start + itemsPerPage)
 })
 
-// Fetch blogs
+// Fetch all blogs
 const fetchBlogs = async () => {
   loading.value = true
   try {
-    const res = await api.get("/blogs/all")
+    const res = await api.get("/blogs/all") // API should populate author
+    let fetched = res.data.blogs || []
 
-    const fetched = res.data.blogs || []
+    // Sort by creation date (newest first)
+    fetched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
-    fetched.sort((a, b) => b._id.localeCompare(a._id))
-
-    blogs.value = fetched
+    // Add formattedDate to each blog
+    blogs.value = fetched.map(blog => ({
+      ...blog,
+      formattedDate: formatDate(blog.createdAt)
+    }))
 
     message.value = ""
+    messageType.value = "success"
+
   } catch (err) {
-    console.error(err)
+    console.error("Failed to fetch blogs:", err)
     blogs.value = []
     message.value = err.response?.data?.message || "Failed to fetch blogs."
     messageType.value = "error"
@@ -171,14 +186,19 @@ const handleAddBlog = async () => {
     adding.value = true
     const res = await api.post('/blogs/addBlog', form)
 
-    blogs.value.unshift(res.data)
+    // Add formattedDate to the new blog
+    const newBlog = {
+      ...res.data,
+      formattedDate: formatDate(res.data.createdAt)
+    }
+
+    blogs.value.unshift(newBlog)
     currentPage.value = 1
 
     cancelForm()
 
     message.value = 'Blog added successfully.'
     messageType.value = 'success'
-
     setTimeout(() => message.value = '', 1500)
 
   } catch (err) {
@@ -189,43 +209,34 @@ const handleAddBlog = async () => {
   }
 }
 
+// Reset form
 const cancelForm = () => {
-  Object.assign(form, { name: '', duration: '' })
+  Object.assign(form, { title: '', content: '', featuredImage: '' })
   showForm.value = false
 }
 
 // Admin actions
-const editBlog = (id) => router.push(`/blogs/blog/${id}`)
+const editBlog = (id) => router.push(`/blogs/post/${id}`)
 
 const DeleteBlog = async (blogId) => {
   try {
-    // Confirm deletion
     if (!confirm("Are you sure you want to delete this blog?")) return;
-
-    // Call API
     await api.delete(`/blogs/deleteBlog/${blogId}`);
-
-    // Remove blog locally
     blogs.value = blogs.value.filter(w => w._id !== blogId);
-
-    // Show success message
     message.value = "Blog deleted successfully.";
     messageType.value = "success";
-
-    // Clear message after 3 seconds
     setTimeout(() => { message.value = '' }, 3000);
-
   } catch (err) {
     console.error(err);
     message.value = err.response?.data?.message || "Failed to delete blog.";
     messageType.value = "error";
-
     setTimeout(() => { message.value = '' }, 3000);
   }
 };
 
-const goToBlog = (id) => router.push(`/blogs/blog/${id}`)
+const goToBlog = (id) => router.push(`/blogs/post/${id}`)
 
+// On mounted, fetch user details and blogs
 onMounted(async () => {
   if (auth.token && !auth.user) {
     try {

@@ -1,38 +1,33 @@
-# .
+## Blog Application
 
-This template should help get you started developing with Vue 3 in Vite.
+## 1. Description
 
-## Recommended IDE Setup
+- **Blog Posts (CRUD)**
+  - **Create:** Authenticated users can create new blog posts with a title, content, and an optional featured image.
+  - **Read:** Authenticated users can view blog posts along with author information and associated comments.
+  - **Update:** Authenticated users can edit their own posts. Featured images are validated for acceptable file types.
+  - **Delete:** Authenticated users can delete their own posts, and admins can delete any post.
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Comment System**
+  - **Add Comments:** Authenticated users can comment on any blog post. Each comment stores a reference to the user who posted it. Comments are validated to prevent empty submissions.
+  - **View Comments:** Users can retrieve all comments for a blog post.
+  - **Delete Comments:** Only admins have the authority to delete any comment, ensuring content moderation and control.
 
-## Recommended Browser Setup
+- **Authorization & Security**
+  - Users can register to create blog posts and leave comments. Username and email must be unique.
+  - Users can perform update or delete operations only on their own posts.
+  - Blog posts are only visible to authenticated users.
+  - Admins can delete any blog post or comment.
+  - Input validation ensures that data such as featured image and comment meet expected formats.
+  - Error handling returns meaningful HTTP status codes for invalid operations or missing resources.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## 2. Login Credentials
 
-## Customize configuration
+- **Admin:**
+  - U: admin@mail.com
+  - P: admin123
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+- **User:**
+  - U: lord@mail.com
+  - P: lord1234
+  - Or register a new one

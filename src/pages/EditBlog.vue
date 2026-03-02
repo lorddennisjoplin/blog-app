@@ -48,7 +48,7 @@
       <!-- NON-ADMIN: SEE MOVIE DETAILS -->
       <div v-else-if="blog" class="card shadow-sm p-4 mt-3 col-md-6 mx-auto">
         <h1 class="card-title mb-2">{{ blog.title }}</h1>
-        <p class="fw-bold text-muted mb-0">By {{ blog.author?.username || 'Unknown' }}</p>
+        <p class="fw-bold text-muted mb-0">By {{ blog.author?.username || 'Unknown' }} &bull; {{ formattedDate }}</p>
         <hr>
         <p class="card-img mb-4"><img v-if="blog.featuredImage" :src="blog.featuredImage" style="width: 100%;" class="img-fluid rounded" /></p>
         <div class="card-text mb-3" v-html="blog.content"></div>
@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../services/api.js';
@@ -74,6 +74,17 @@ const errorMessage = ref("")
 
 const message = ref('')       // For success/error messages
 const messageType = ref('')
+
+// Format blog post date
+const formattedDate = computed(() => {
+  if (!blog.value?.createdAt) return ''
+  const date = new Date(blog.value.createdAt)
+  return date.toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric' 
+  })
+})
 
 const form = reactive({
   title: '',
