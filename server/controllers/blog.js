@@ -29,7 +29,7 @@ module.exports.addBlogPost = async (req, res) => {
     }
 
     // Authorisation check
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.id) {
       console.log("Auth failed: req.user missing or invalid");
       return res.status(401).json({
         message: "Unauthorized. User not found in request."
