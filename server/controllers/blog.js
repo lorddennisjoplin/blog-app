@@ -44,17 +44,32 @@ module.exports.addBlogPost = async (req, res) => {
 };
 
 module.exports.getAllBlogPosts = (req, res) => {
-  return Blog.find({})
-    .populate('author', 'username email') // <-- populate author details
+  const { limit, excludeId } = req.query
+
+  let query = {}
+
+  if (excludeId) {
+    query._id = { $ne: excludeId } // exclude current post
+  }
+
+  let blogsQuery = Blog.find(query)
+    .populate('author', 'username email')
+    .sort({ createdAt: -1 }) // latest first
+
+  if (limit) {
+    blogsQuery = blogsQuery.limit(Number(limit))
+  }
+
+  blogsQuery
     .then(result => {
       if (result.length > 0) {
-        return res.status(200).json({ blogs: result });
+        return res.status(200).json({ blogs: result })
       } else {
-        return res.status(404).json({ message: 'No blogs found.' });
+        return res.status(404).json({ message: 'No blogs found.' })
       }
     })
-    .catch(error => errorHandler(error, req, res));
-};
+    .catch(error => errorHandler(error, req, res))
+}
 
 // Get all blog posts by a specific username
 module.exports.getUserBlogPosts = (req, res) => {

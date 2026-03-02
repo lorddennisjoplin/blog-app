@@ -4,7 +4,7 @@ const auth = require('../auth');
 const { verify, verifyAdmin } = auth;
 const router = express.Router();
 
-router.post("/add", verify, blogController.addBlogPost); 
+router.post("/add", verify, blogController.addBlogPost);
 router.get("/all", verify, blogController.getAllBlogPosts);
 router.get('/user/:username', blogController.getUserBlogPosts)
 router.get("/view/:blogId", verify, blogController.getBlogPostById);

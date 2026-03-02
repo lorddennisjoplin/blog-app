@@ -56,7 +56,7 @@
             required
           />
 
-          <button class="btn btn-primary btn-sm me-2" :disabled="editing">
+          <button class="btn btn-primary me-2" :disabled="editing">
             <span v-if="editing">
               <span class="spinner-border spinner-border-sm me-1"></span>
               Saving...
@@ -64,7 +64,7 @@
             <span v-else>Save Changes</span>
           </button>
 
-          <button type="button" class="btn btn-secondary btn-sm" @click="router.push(`/posts/view/${route.params.id}`)">
+          <button type="button" class="btn btn-secondary" @click="router.push(`/posts/view/${route.params.id}`)">
             Cancel
           </button>
         </form>
@@ -111,7 +111,13 @@
                 <div class="mb-2">
                   <textarea v-model="newComment" class="form-control" rows="3" placeholder="Write a comment..." required></textarea>
                 </div>
-                <button type="submit" class="btn btn-sm btn-primary mt-2">Post Comment</button>
+                <button type="submit" class="btn btn-primary mt-2" :disabled="submittingComment">
+                  <span v-if="submittingComment">
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                    Posting...
+                  </span>
+                  <span v-else>Post Comment</span>
+                </button>
               </form>
             </div>
             <div v-else class="text-muted mb-4">
@@ -121,7 +127,15 @@
             <div v-if="comments.length > 0">
               <div v-for="(comment, index) in comments" :key="comment._id || index" class="border rounded p-3 mb-2 bg-info">
                 <p class="mb-1">
-                  <strong>{{ comment.userId?.username || 'Unknown' }}</strong>
+                  <RouterLink
+                    v-if="comment.userId?.username"
+                    :to="`/posts/user/${comment.userId.username}`"
+                    class="text-decoration-none fw-bold"
+                  >
+                    {{ comment.userId.username }}
+                  </RouterLink>
+
+                  <strong v-else>Unknown</strong>
                   <small class="text-muted ms-2">{{ formatDate(comment.createdAt) || 'Unknown Date' }}</small>
                 </p>
                 <p class="mb-0">{{ comment.comment }}</p>
@@ -171,6 +185,7 @@ const loading = ref(true)
 const editing = ref(false)
 const message = ref('')
 const messageType = ref('')
+const submittingComment = ref(false)
 
 // Form (reactive)
 const form = reactive({
@@ -284,8 +299,13 @@ const handleEditBlog = async () => {
     editing.value = true
     const res = await api.patch(`/posts/edit/${route.params.id}`, form)
 
-    message.value = "Blog updated successfully."
+    message.value = "Blog updated successfully. Redirecting..."
     messageType.value = "success"
+
+    setTimeout(() => {
+      message.value = ''
+      messageType.value = ''
+    }, 2000)
 
     if (res.data.updatedBlog) {
       blog.value = res.data.updatedBlog
@@ -298,7 +318,7 @@ const handleEditBlog = async () => {
 
     setTimeout(() => {
       router.push(`/posts/view/${route.params.id}`)
-    }, 1500)
+    }, 2000)
 
   } catch (err) {
     console.error(err)
@@ -316,7 +336,10 @@ const newComment = ref('')
 const fetchComments = async (postId) => {
   try {
     const res = await api.get(`/posts/getComments/${postId}`)
-    comments.value = res.data.comments || []
+
+    comments.value = (res.data.comments || [])
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
   } catch (err) {
     console.error('Failed to fetch comments:', err)
   }
@@ -324,20 +347,26 @@ const fetchComments = async (postId) => {
 
 const submitComment = async () => {
   if (!newComment.value.trim()) return
-    console.log('Posting with token:', auth.token)
+
   try {
+    submittingComment.value = true
+
     const res = await api.post(
       `/posts/addComment/${blog.value._id}`,
       { comment: newComment.value },
-      { headers: { Authorization: `Bearer ${auth.token}` } } // uppercase A ✅
+      { headers: { Authorization: `Bearer ${auth.token}` } }
     )
-    comments.value.push(res.data.comment)
+
+    // Add to the top
+    comments.value.unshift(res.data.comment)
     newComment.value = ''
+
   } catch (err) {
     console.error('Failed to post comment:', err)
+  } finally {
+    submittingComment.value = false
   }
 }
-
 // Delete a comment (admin only)
 const deleteComment = async (commentId) => {
   if (!confirm("Are you sure you want to delete this comment?")) return
