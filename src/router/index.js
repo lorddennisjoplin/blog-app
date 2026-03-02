@@ -55,7 +55,7 @@ router.beforeEach((to, from, next) => {
     return next("/posts");
   }
 
-  const protectedRoutes = ["/posts/view","/posts/add","/posts/edit"];
+  const protectedRoutes = ["/posts/view","/posts/add","/posts/edit","/posts/delete"];
 
   if (
     !auth.isAuthenticated &&
