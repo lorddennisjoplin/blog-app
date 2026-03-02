@@ -80,15 +80,16 @@ module.exports.getBlogPostById = (req, res) => {
     const blogId = req.params.blogId;
 
     Blog.findById(blogId)
-        .then(blog => {
-            if (blog) {
-                return res.status(200).json({ blog });
-                
-            } else {
-                return res.status(404).json({ message: 'Blog not found.' });
-            }
-        })
-        .catch(error => errorHandler(error, req, res));
+      .populate('author', 'username email')
+      .then(blog => {
+          if (blog) {
+              return res.status(200).json({ blog });
+              
+          } else {
+              return res.status(404).json({ message: 'Blog not found.' });
+          }
+      })
+      .catch(error => errorHandler(error, req, res));
 };
 
 module.exports.updateBlogPost = async (req, res) => {
