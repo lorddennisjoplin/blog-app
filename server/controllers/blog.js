@@ -56,6 +56,31 @@ module.exports.getAllBlogPosts = (req, res) => {
     .catch(error => errorHandler(error, req, res));
 };
 
+// Get all blog posts by a specific username
+module.exports.getUserBlogPosts = (req, res) => {
+  const username = req.params.username
+
+  if (!username) {
+    return res.status(400).json({ message: 'Username is required.' })
+  }
+
+  Blog.find({})
+    .populate('author', 'username email')
+    .then(blogs => {
+      // Filter blogs for this username
+      const userBlogs = blogs.filter(
+        blog => blog.author && blog.author.username === username
+      )
+
+      if (userBlogs.length > 0) {
+        return res.status(200).json({ blogs: userBlogs })
+      } else {
+        return res.status(404).json({ message: 'No posts found for this user.' })
+      }
+    })
+    .catch(error => errorHandler(error, req, res))
+}
+
 module.exports.getBlogPostById = (req, res) => {
     if (!req.user) {
         return res.status(401).json({ message: "Unauthorized: No token provided" });

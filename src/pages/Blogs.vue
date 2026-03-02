@@ -1,6 +1,6 @@
 <template>
   <div class="container my-5 text-start">
-    <h1 class="mb-4">All Blogs</h1>
+    <h1 class="mb-4">All Posts</h1>
 
     <div class="row">
       <!-- Main content: 80% -->
@@ -107,13 +107,26 @@ const formatDate = (isoString) => {
   }) // e.g., "02 Mar 2026"
 }
 
-// Function to strip HTML and truncate
+// Function to strip HTML and truncate without cutting words
 const stripAndTruncate = (html, maxLength) => {
   if (!html) return ''
-  // Remove HTML tags
-  const text = html.replace(/<[^>]*>/g, ' ')
-  // Truncate and add ellipses if needed
-  return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
+
+  // Remove HTML tags and collapse multiple spaces
+  let text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // If text is short enough, return it
+  if (text.length <= maxLength) return text
+
+  // Truncate without cutting words
+  let truncated = text.slice(0, maxLength)
+
+  // Find last space in truncated text
+  const lastSpace = truncated.lastIndexOf(' ')
+  if (lastSpace > 0) {
+    truncated = truncated.slice(0, lastSpace)
+  }
+
+  return truncated + '...'
 }
 
 // Computed for pagination
