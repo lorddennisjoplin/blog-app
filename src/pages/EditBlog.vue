@@ -35,25 +35,19 @@
 
           <!-- Tiptap Toolbar -->
           <div v-if="editor" class="mb-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-              @click="editor.chain().focus().toggleBold().run()">
-              Bold
-            </button>
+            <!-- Headings -->
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">H2</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">H3</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 4 }).run()">H4</button>
 
-            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-              @click="editor.chain().focus().toggleItalic().run()">
-              Italic
-            </button>
+            <!-- Text styles -->
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBold().run()"><strong>B</strong></button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleItalic().run()"><em>I</em></button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleStrike().run()"><s>S</s></button>
 
-            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-              @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">
-              H2
-            </button>
-
-            <button type="button" class="btn btn-sm btn-outline-secondary"
-              @click="editor.chain().focus().toggleBulletList().run()">
-              List
-            </button>
+            <!-- Lists -->
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
           </div>
 
           <!-- Tiptap Editor -->

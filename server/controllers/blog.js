@@ -120,7 +120,7 @@ module.exports.updateBlogPost = async (req, res) => {
     }
 
     // Authorization check
-    const isOwner = blog.author.toString() === req.user._id.toString();
+    const isOwner = blog.author.toString() === req.user.id.toString();
 
     if (!isOwner) {
       return res.status(403).json({
@@ -173,7 +173,7 @@ module.exports.deleteBlogPost = async (req, res) => {
 
     // Authorization check
     const isAdmin = !!req.user.isAdmin;
-    const isOwner = blog.author?.toString() === req.user._id.toString();
+    const isOwner = blog.author?.toString() === req.user.id.toString();
 
     if (!isAdmin && !isOwner) {
       return res.status(403).json({
