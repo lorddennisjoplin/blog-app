@@ -26,12 +26,11 @@
           <table class="table table-bordered">
             <thead class="table-light">
               <tr>
-                <th class="text-center">Poster</th>
+                <th class="text-center">Featured Image</th>
                 <th class="text-center">Title</th>
-                <th class="text-center">Director</th>
-                <th class="text-center">Year</th>
-                <th class="text-center">Description</th>
-                <th class="text-center">Genre</th>
+                <th class="text-center">Content</th>
+                <th class="text-center">Author</th>
+                <th class="text-center">Date</th>
                 <th class="text-center">Actions</th>
               </tr>
             </thead>
@@ -41,10 +40,11 @@
                   <img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="img-fluid" />
                 </td>
                 <td class="text-center">{{ blog.title }}</td>
-                <td class="text-center">{{ blog.director }}</td>
-                <td class="text-center">{{ blog.year }}</td>
-                <td>{{ blog.description }}</td>
-                <td class="text-center">{{ blog.genre }}</td>
+                <td class="card-text mb-3">
+                  {{ stripAndTruncate(blog.content, 150) }}
+                </td>
+                <td class="text-center">{{ blog.author?.username || 'Unknown' }}</td>
+                <td class="text-center">{{ blog.formattedDate }}</td>
                 <td class="text-center" style="white-space: nowrap;">
                   <button class="btn btn-sm btn-primary me-2" @click="editBlog(blog._id)">
                     Edit
@@ -143,6 +143,15 @@ const formatDate = (isoString) => {
   }) // e.g., "02 Mar 2026"
 }
 
+// Function to strip HTML and truncate
+const stripAndTruncate = (html, maxLength) => {
+  if (!html) return ''
+  // Remove HTML tags
+  const text = html.replace(/<[^>]*>/g, ' ')
+  // Truncate and add ellipses if needed
+  return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
+}
+
 // Computed for pagination
 const activeBlogs = computed(() => blogs.value.filter(p => p.isActive))
 const totalPages = computed(() => Math.ceil(blogs.value.length / itemsPerPage))
@@ -220,15 +229,16 @@ const editBlog = (id) => router.push(`/blogs/post/${id}`)
 
 const DeleteBlog = async (blogId) => {
   try {
-    if (!confirm("Are you sure you want to delete this blog?")) return;
-    await api.delete(`/blogs/deleteBlog/${blogId}`);
+    if (!confirm("Are you sure you want to delete this post?")) return;
+    await api.delete(`/blogs/delete/${blogId}`);
+    console.log(blogId);
     blogs.value = blogs.value.filter(w => w._id !== blogId);
-    message.value = "Blog deleted successfully.";
+    message.value = "Blog post deleted successfully.";
     messageType.value = "success";
     setTimeout(() => { message.value = '' }, 3000);
   } catch (err) {
     console.error(err);
-    message.value = err.response?.data?.message || "Failed to delete blog.";
+    message.value = err.response?.data?.message || "Failed to delete blog post.";
     messageType.value = "error";
     setTimeout(() => { message.value = '' }, 3000);
   }

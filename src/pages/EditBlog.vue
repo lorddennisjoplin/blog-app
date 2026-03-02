@@ -25,10 +25,7 @@
 
         <form @submit.prevent="handleEditBlog">
           <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
-          <input v-model="form.director" type="text" class="form-control mb-2" placeholder="Director" required />
-          <input v-model="form.year" type="text" class="form-control mb-2" placeholder="Year" pattern="\d{4}" title="Year must be 4 digits" required />
-          <textarea v-model="form.description" class="form-control mb-2" placeholder="Description" required></textarea>
-          <input v-model="form.genre" type="text" class="form-control mb-3" placeholder="Genre" required />
+          <textarea v-model="form.content" class="form-control mb-2" placeholder="Description" required></textarea>
           <input v-model="form.image" type="url" class="form-control mb-2" placeholder="Poster URL" required />
 
           <button class="btn btn-primary btn-sm me-2" :disabled="editing">
@@ -52,6 +49,12 @@
         <hr>
         <p class="card-img mb-4"><img v-if="blog.featuredImage" :src="blog.featuredImage" style="width: 100%;" class="img-fluid rounded" /></p>
         <div class="card-text mb-3" v-html="blog.content"></div>
+
+        <div v-if="auth.isAdmin">
+          <button class="btn btn-sm btn-danger" @click="DeleteBlog(blog._id)">
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -94,10 +97,12 @@ const form = reactive({
 
 const moreBlogs = ref([])
 
+const blogId = route.params.id;
+
 // Load blog
 onMounted(async () => {
   try {
-    const res = await api.get(`/blogs/post/${route.params.id}`);
+    const res = await api.get(`/blogs/post/${blogId}`);
 
     Object.assign(form, res.data.blog);
     blog.value = res.data.blog;
@@ -108,13 +113,12 @@ onMounted(async () => {
   }
 });
 
-
 const goToBlogs = (id) => router.push(`/blogs`)
 
 const handleEditBlog = async () => {
   try {
     editing.value = true
-    await api.patch(`/blogs/updateBlog/${route.params.id}`, form)
+    await api.patch(`/blogs/updateBlog/${blogId}`, form)
 
     // Show confirmation message
     message.value = "Blog updated successfully."
@@ -133,4 +137,27 @@ const handleEditBlog = async () => {
     editing.value = false
   }
 }
+
+const DeleteBlog = async (blogId) => {
+  try {
+    if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
+
+    await api.delete(`/blogs/delete/${blogId}`);
+
+    message.value = "Blog post deleted successfully.";
+    messageType.value = "success";
+
+    setTimeout(() => {
+      message.value = '';
+      router.push("/blogs"); // redirect to blog list
+    }, 3000);
+
+  } catch (err) {
+    console.error(err);
+    message.value = err.response?.data?.message || "Failed to delete blog post.";
+    messageType.value = "error";
+
+    setTimeout(() => { message.value = '' }, 3000);
+  }
+};
 </script>
