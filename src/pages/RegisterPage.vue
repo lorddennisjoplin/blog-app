@@ -16,7 +16,7 @@
 
         <form @submit.prevent="handleRegister">
           <p class="small">All fields are required.</p>
-          <input v-model="form.username" class="form-control mb-2" type="text" placeholder="Display Name *" required />
+          <input v-model="form.username" class="form-control mb-2" type="text" placeholder="Username *" required />
           <input v-model="form.email" class="form-control mb-2" type="email" placeholder="Email Address *" required />
           <input v-model="form.password" type="password" class="form-control mb-2" minlength="8" placeholder="Password (At least 8 characters)" required />
           <input v-model="form.confirmPassword" type="password" class="form-control mb-3" minlength="8" placeholder="Confirm Password" required />

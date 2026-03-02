@@ -4,7 +4,7 @@
 
       <!-- Brand -->
       <RouterLink class="navbar-brand" to="/">
-        Movies Catalogue
+        Blog App
       </RouterLink>
 
       <!-- Hamburger (mobile) -->

@@ -1,10 +1,10 @@
 <template>
   <div class="container my-5 text-start">
-    <h1 class="mb-4">All Movies</h1>
+    <h1 class="mb-4">All Blogs</h1>
 
     <div v-if="auth.isAdmin" class="mb-3">
-      <button class="btn btn-sm btn-primary me-2" id="addMovie" @click="showForm = !showForm">
-        Add Movie
+      <button class="btn btn-sm btn-primary me-2" id="addBlog" @click="showForm = !showForm">
+        Add Blog
       </button>
     </div>
 
@@ -19,9 +19,9 @@
     </div>
 
     <div class="mt-4 text-start">
-      <div v-if="loading" class="alert alert-info py-2">Loading movies...</div>
+      <div v-if="loading" class="alert alert-info py-2">Loading blogs...</div>
 
-      <div v-else-if="paginatedMovies.length && auth.isAdmin">
+      <div v-else-if="paginatedBlogs.length && auth.isAdmin">
         <div class="table-responsive">
           <table class="table table-bordered">
             <thead class="table-light">
@@ -36,20 +36,20 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="movie in paginatedMovies" :key="movie._id">
+              <tr v-for="blog in paginatedBlogs" :key="blog._id">
                 <td class="text-center">
-                  <img :src="movie.image || 'https://placehold.co/400x400?text=No+Image'" width="150" class="img-fluid" />
+                  <img :src="blog.image || 'https://placehold.co/400x400?text=No+Image'" width="150" class="img-fluid" />
                 </td>
-                <td class="text-center">{{ movie.title }}</td>
-                <td class="text-center">{{ movie.director }}</td>
-                <td class="text-center">{{ movie.year }}</td>
-                <td>{{ movie.description }}</td>
-                <td class="text-center">{{ movie.genre }}</td>
+                <td class="text-center">{{ blog.title }}</td>
+                <td class="text-center">{{ blog.director }}</td>
+                <td class="text-center">{{ blog.year }}</td>
+                <td>{{ blog.description }}</td>
+                <td class="text-center">{{ blog.genre }}</td>
                 <td class="text-center" style="white-space: nowrap;">
-                  <button class="btn btn-sm btn-primary me-2" @click="editMovie(movie._id)">
+                  <button class="btn btn-sm btn-primary me-2" @click="editBlog(blog._id)">
                     Edit
                   </button>
-                  <button class="btn btn-sm btn-danger" @click="DeleteMovie(movie._id)">
+                  <button class="btn btn-sm btn-danger" @click="DeleteBlog(blog._id)">
                     Delete
                   </button>
                 </td>
@@ -84,17 +84,17 @@
       <div v-else>
         <div class="row">
         <div
-          v-for="movie in movies"
-          :key="movie._id"
+          v-for="blog in blogs"
+          :key="blog._id"
           class="col-12 col-md-4 mb-4"
         >
           <div class="card h-100 shadow-sm">
             <div class="card-body d-flex flex-column">
-              <a href="#"><img :src="movie.image || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToMovie(movie._id)" /></a>
-              <h3 class="card-title">{{ movie.title }}</h3>
-              <h6 class="card-subtitle mb-2 text-muted">{{ movie.director }} ({{ movie.year }})</h6>
-              <p class="text-success mb-3">{{ movie.genre }}</p>
-              <button class="btn btn-primary" @click="goToMovie(movie._id)">View Movie Details</button>
+              <a href="#"><img :src="blog.image || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToBlog(blog._id)" /></a>
+              <h3 class="card-title">{{ blog.title }}</h3>
+              <h6 class="card-subtitle mb-2 text-muted">{{ blog.director }} ({{ blog.year }})</h6>
+              <p class="text-success mb-3">{{ blog.genre }}</p>
+              <button class="btn btn-primary" @click="goToBlog(blog._id)">View Blog Details</button>
             </div>
           </div>
         </div>
@@ -128,54 +128,54 @@ const form = reactive({
   image: ''
 })
 
-// Movies
-const movies = ref([])
+// Blogs
+const blogs = ref([])
 const loading = ref(true)
 const itemsPerPage = 10
 const currentPage = ref(1)
 
-const activeMovies = computed(() => movies.value.filter(p => p.isActive))
-const totalPages = computed(() => Math.ceil(movies.value.length / itemsPerPage))
-const paginatedMovies = computed(() => {
+const activeBlogs = computed(() => blogs.value.filter(p => p.isActive))
+const totalPages = computed(() => Math.ceil(blogs.value.length / itemsPerPage))
+const paginatedBlogs = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
-  return movies.value.slice(start, start + itemsPerPage)
+  return blogs.value.slice(start, start + itemsPerPage)
 })
 
-// Fetch movies
-const fetchMovies = async () => {
+// Fetch blogs
+const fetchBlogs = async () => {
   loading.value = true
   try {
-    const res = await api.get("/movies/getMovies")
+    const res = await api.get("/blogs/all")
 
-    const fetched = res.data.movies || []
+    const fetched = res.data.blogs || []
 
     fetched.sort((a, b) => b._id.localeCompare(a._id))
 
-    movies.value = fetched
+    blogs.value = fetched
 
     message.value = ""
   } catch (err) {
     console.error(err)
-    movies.value = []
-    message.value = err.response?.data?.message || "Failed to fetch movies."
+    blogs.value = []
+    message.value = err.response?.data?.message || "Failed to fetch blogs."
     messageType.value = "error"
   } finally {
     loading.value = false
   }
 }
 
-// Add movie
-const handleAddMovie = async () => {
+// Add blog
+const handleAddBlog = async () => {
   try {
     adding.value = true
-    const res = await api.post('/movies/addMovie', form)
+    const res = await api.post('/blogs/addBlog', form)
 
-    movies.value.unshift(res.data)
+    blogs.value.unshift(res.data)
     currentPage.value = 1
 
     cancelForm()
 
-    message.value = 'Movie added successfully.'
+    message.value = 'Blog added successfully.'
     messageType.value = 'success'
 
     setTimeout(() => message.value = '', 1500)
@@ -194,21 +194,21 @@ const cancelForm = () => {
 }
 
 // Admin actions
-const editMovie = (id) => router.push(`/movies/movie/${id}`)
+const editBlog = (id) => router.push(`/blogs/blog/${id}`)
 
-const DeleteMovie = async (movieId) => {
+const DeleteBlog = async (blogId) => {
   try {
     // Confirm deletion
-    if (!confirm("Are you sure you want to delete this movie?")) return;
+    if (!confirm("Are you sure you want to delete this blog?")) return;
 
     // Call API
-    await api.delete(`/movies/deleteMovie/${movieId}`);
+    await api.delete(`/blogs/deleteBlog/${blogId}`);
 
-    // Remove movie locally
-    movies.value = movies.value.filter(w => w._id !== movieId);
+    // Remove blog locally
+    blogs.value = blogs.value.filter(w => w._id !== blogId);
 
     // Show success message
-    message.value = "Movie deleted successfully.";
+    message.value = "Blog deleted successfully.";
     messageType.value = "success";
 
     // Clear message after 3 seconds
@@ -216,14 +216,14 @@ const DeleteMovie = async (movieId) => {
 
   } catch (err) {
     console.error(err);
-    message.value = err.response?.data?.message || "Failed to delete movie.";
+    message.value = err.response?.data?.message || "Failed to delete blog.";
     messageType.value = "error";
 
     setTimeout(() => { message.value = '' }, 3000);
   }
 };
 
-const goToMovie = (id) => router.push(`/movies/movie/${id}`)
+const goToBlog = (id) => router.push(`/blogs/blog/${id}`)
 
 onMounted(async () => {
   if (auth.token && !auth.user) {
@@ -237,6 +237,6 @@ onMounted(async () => {
     }
   }
 
-  fetchMovies()
+  fetchBlogs()
 })
 </script>
