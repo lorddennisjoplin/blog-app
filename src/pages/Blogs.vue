@@ -67,7 +67,7 @@
                 <div style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; cursor: pointer;" @click="goToBlog(blog._id)">
                   <img
                     :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
-                    class="img-fluid w-100 h-100"
+                    class="img-fluid w-100 h-100 rounded"
                     style="object-fit: cover;"
                   />
                 </div>
