@@ -19,10 +19,10 @@ mongoose.connect(mongoURI)
 
 // Routes
 const userRoutes = require("./routes/user");
-const movieRoutes = require("./routes/movie");
+const blogRoutes = require("./routes/blog");
 
 app.use("/users", userRoutes);
-app.use("/movies", movieRoutes);
+app.use("/blogs", blogRoutes);
 
 // Start server
 const port = process.env.PORT || 4000;
