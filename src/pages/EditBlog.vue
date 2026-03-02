@@ -112,7 +112,7 @@
 
             <div v-if="comments.length > 0">
               <div v-for="(comment, index) in comments" :key="comment._id || index" class="border rounded p-3 mb-2">
-                <p class="mb-1"><strong>{{ comment.user?.username || 'Unknown' }}</strong></p>
+                <p class="mb-1"><strong>{{ comment.userId?.username || 'Unknown' }}</strong></p>
                 <p class="mb-0">{{ comment.comment }}</p>
               </div>
             </div>

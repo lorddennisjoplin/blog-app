@@ -66,7 +66,7 @@ module.exports.loginUser = (req, res) => {
     const { identifier, password } = req.body; // identifier = email OR username
 
     if (!identifier || !password) {
-        return res.status(400).send({ success: false, message: "Please provide your email/username and password." });
+        return res.status(400).send({ success: false, message: "Enter your username/email and password." });
     }
 
     // Determine if identifier is an email
