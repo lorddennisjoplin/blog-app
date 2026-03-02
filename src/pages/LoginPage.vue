@@ -9,7 +9,7 @@
         </div>
 
         <form @submit.prevent="handleLogin">
-          <input v-model="email" type="email" required class="form-control mb-3" placeholder="Email" />
+          <input v-model="loginForm.identifier" type="text" required class="form-control mb-3" placeholder="Username or Email Address" />
           <input v-model="password" type="password" required class="form-control mb-3" placeholder="Password" />
 
           <button

@@ -63,23 +63,27 @@ module.exports.registerUser = async (req, res) => {
 };
 
 module.exports.loginUser = (req, res) => {
+    const { identifier, password } = req.body; // identifier = email OR username
 
-    const { email, password } = req.body;
-
-    if (!email.includes("@")) {
-        return res.status(400).send({ success: false, message: "Invalid email format." });
+    if (!identifier || !password) {
+        return res.status(400).send({ success: false, message: "Please provide your email/username and password." });
     }
 
-    User.findOne({ email })
+    // Determine if identifier is an email
+    const isEmail = identifier.includes("@");
+
+    const query = isEmail 
+        ? { email: identifier } 
+        : { username: identifier };
+
+    User.findOne(query)
         .then(user => {
             if (!user) {
-                // Email not found
-                return res.status(404).send({ success: false, message: "Email does not exist." });
+                return res.status(404).send({ success: false, message: "User not found." });
             }
 
             const isPasswordCorrect = bcrypt.compareSync(password, user.password);
             if (!isPasswordCorrect) {
-                // Password incorrect
                 return res.status(401).send({ success: false, message: "Incorrect password." });
             }
 
