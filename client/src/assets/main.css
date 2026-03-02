@@ -1,0 +1,46 @@
+body {
+  font-family: 'Manrope', sans-serif !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 800 !important;
+}
+
+h1 {
+  font-size: 1.8rem !important;
+}
+
+h2 {
+  font-size: 1.6rem !important;
+}
+
+h3 {
+  font-size: 1.4rem !important;
+}
+
+h4 {
+  font-size: 1.2rem !important;
+}
+
+h5 {
+  font-size: 1.0rem !important;
+}
+
+h6 {
+  font-size: 1.2rem !important;
+}
+
+.navbar-brand,
+button,
+label {
+  font-weight: 600 !important;
+}
+
+th {
+  white-space: nowrap;
+}
