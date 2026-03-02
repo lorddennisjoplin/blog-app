@@ -25,8 +25,8 @@
 		  <template v-if="auth.isAuthenticated">
 
 		    <li class="nav-item">
-		      <RouterLink class="nav-link" to="/movies">
-		        <i class="bi bi-film"></i> All Movies
+		      <RouterLink class="nav-link" to="/blogs">
+		        <i class="bi bi-film"></i> All Blogs
 		      </RouterLink>
 		    </li>
 

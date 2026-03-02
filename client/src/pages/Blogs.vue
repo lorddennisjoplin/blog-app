@@ -18,44 +18,6 @@
       {{ message }}
     </div>
 
-    <div v-if="showForm && auth.isAdmin" class="card p-3 my-3 text-start">
-      <h2 class="mb-3">Add Movie</h2>
-
-      <!-- Success / Error Alert -->
-      <div
-        v-if="message && movies.value?.length === 0"
-        :class="[
-          'alert py-2',
-          messageType === 'success' ? 'alert-success' : 'alert-danger'
-        ]"
-      >
-        {{ message }}
-      </div>
-
-      <form @submit.prevent="handleAddMovie">
-        <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
-        <input v-model="form.director" type="text" class="form-control mb-2" placeholder="Director" required />
-        <input v-model="form.year" type="text" class="form-control mb-2" placeholder="Year" pattern="\d{4}" title="Year must be 4 digits" required />
-        <textarea v-model="form.description" class="form-control mb-2" placeholder="Description" required></textarea>
-        <input v-model="form.genre" type="text" class="form-control mb-2" placeholder="Genre" required />
-        <input v-model="form.image" type="url" class="form-control mb-2" placeholder="Poster URL" />
-
-        <button type="submit" class="btn btn-sm btn-primary me-2" :disabled="adding">
-          <span v-if="adding">
-            <span class="spinner-border spinner-border-sm me-1"></span>
-            Adding...
-          </span>
-          <span v-else>
-            Save
-          </span>
-        </button>
-
-        <button type="button" class="btn btn-sm btn-secondary me-2" @click="cancelForm" :disabled="adding">
-          Cancel
-        </button>
-      </form>
-    </div>
-
     <div class="mt-4 text-start">
       <div v-if="loading" class="alert alert-info py-2">Loading movies...</div>
 

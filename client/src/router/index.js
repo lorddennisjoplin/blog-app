@@ -3,17 +3,19 @@ import { useUserStore } from "../stores/user";
 
 import Login from "../pages/LoginPage.vue";
 import Register from "../pages/RegisterPage.vue";
-import Movies from "../pages/Movies.vue";
-import EditWorkout from "../pages/EditMovie.vue";
+import Blogs from ".../pages/Blogs.vue";
+import AddBlog from ".../pages/AddBlog.vue";
+import EditBlog from "../pages/EditBlog.vue";
 // import User from "../pages/User.vue";
 
 const routes = [
   { path: "/login", component: Login },
   { path: "/register", component: Register },
-  { path: "/movies", component: Movies },
-  { path: "/movies/movie/:id", component: EditWorkout },
+  { path: "/blogs", component: Blogs },
+  { path: "/blogs/add", component: Blogs },
+  { path: "/blogs/blog/:id", component: EditBlog },
   // { path: "/user", component: User },
-  { path: "/", redirect: "/movies" },
+  { path: "/", redirect: "/blogs" },
 ];
 
 const router = createRouter({
@@ -26,10 +28,10 @@ router.beforeEach((to, from, next) => {
 
   // // If already logged in, just go to /products
   if (auth.isAuthenticated && (to.path === "/login" || to.path === "/register")) {
-    return next("/movies");
+    return next("/blogs");
   }
 
-  const protectedRoutes = ["/movies/movie"];
+  const protectedRoutes = ["/blogs/blog"];
 
   if (
     !auth.isAuthenticated &&
