@@ -6,8 +6,28 @@ const { errorHandler } = require('../auth');
 
 module.exports.registerUser = async (req, res) => {
     try {
+        const { username, email, password } = req.body;
+
+        // Check if username already exists
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(409).json({
+                success: false,
+                message: "Username already taken."
+            });
+        }
+
+        // Check if email already exists
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already exists."
+            });
+        }
+
         // Validate email
-        if (!req.body.email.includes("@")) {
+        if (!email.includes("@")) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid email format."
@@ -15,31 +35,24 @@ module.exports.registerUser = async (req, res) => {
         }
 
         // Validate password length
-        if (req.body.password.length < 8) {
+        if (password.length < 8) {
             return res.status(400).json({
                 success: false,
                 message: "Password must be at least 8 characters."
             });
         }
 
-        // Check if email already exists
-        const existingUser = await User.findOne({ email: req.body.email });
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: "Email already exists."
-            });
-        }
-
         // Create new user
         const newUser = new User({
-            name: req.body.name,
-            email: req.body.email,
-            password: bcrypt.hashSync(req.body.password, 10)
+            username,
+            email,
+            password: bcrypt.hashSync(password, 10)
         });
 
         const savedUser = await newUser.save();
+
         return res.status(201).json({
+            success: true,
             message: "Registered successfully.",
             userId: savedUser._id
         });
