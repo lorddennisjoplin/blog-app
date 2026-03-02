@@ -3,7 +3,7 @@
 ## 1. Description
 
 - **Blog Posts (CRUD)**
-  - **Create:** Authenticated users can create new blog posts with a title, content, and an optional featured image.
+  - **Create:** Authenticated users can create new blog posts with a title, content, and a featured image.
   - **Read:** Authenticated users can view blog posts along with author information and associated comments.
   - **Update:** Authenticated users can edit their own posts. Featured images are validated for acceptable file types.
   - **Delete:** Authenticated users can delete their own posts, and admins can delete any post.
