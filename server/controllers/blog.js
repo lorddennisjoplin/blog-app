@@ -209,27 +209,39 @@ module.exports.addBlogComment = async (req, res) => {
       return res.status(404).json({ message: "Blog post not found." });
     }
 
-    // Add comment
-    blog.comments.push({
-      userId: req.user.id,
-      comment: comment.trim()
-    });
+    // Ensure req.user exists
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "You must be logged in to comment." });
+    }
 
+    // Add comment
+    const newComment = {
+      userId: req.user._id,
+      comment: comment.trim()
+    };
+
+    blog.comments.push(newComment);
     await blog.save();
 
-    return res.status(201).json(blog);
+    // Populate the user field for the newly added comment
+    const populatedComment = await blog.populate({
+      path: 'comments.userId',
+      select: 'username'
+    });
+
+    // Return only the last comment that was added
+    const lastComment = populatedComment.comments[populatedComment.comments.length - 1];
+
+    return res.status(201).json({ comment: lastComment });
 
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: error.message });
   }
 };
 
 module.exports.getBlogComments = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized: No token provided." });
-    }
-
     const blogId = req.params.blogId;
     const blog = await Blog.findById(blogId).populate("comments.userId", "username email");
 
@@ -241,7 +253,8 @@ module.exports.getBlogComments = async (req, res) => {
     return res.status(200).json({ comments: blog.comments });
 
   } catch (error) {
-    return errorHandler(error, req, res);
+    console.error(error);
+    return res.status(500).json({ message: error.message });
   }
 };
 

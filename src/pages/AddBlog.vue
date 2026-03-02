@@ -34,6 +34,18 @@
           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleItalic().run()"><em>I</em></button>
           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleStrike().run()"><s>S</s></button>
 
+          <!-- Links -->
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+            @click="addLink"
+          >
+            🔗 Link
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+            @click="editor.chain().focus().unsetLink().run()"
+          >
+            ❌ Link
+          </button>
+
           <!-- Lists -->
           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
           <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
@@ -103,49 +115,41 @@ const loading = ref(true)
 const currentPage = ref(1)
 
 // ----- Tiptap WYSIWYG Editor -----
-import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
+import Link from '@tiptap/extension-link'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
 
-const editor = new Editor({
-  extensions: [StarterKit],
+const editor = useEditor({
+  extensions: [
+    StarterKit.configure({ link: false }),
+    Link.configure({
+      openOnClick: true,
+      autolink: true,
+      linkOnPaste: true,
+      HTMLAttributes: {
+        target: '_blank',
+        rel: 'nofollow ugc noopener',
+      },
+    }),
+  ],
   content: '',
   onUpdate({ editor }) {
+    // Sync the editor content into your reactive form
     form.content = editor.getHTML()
-  }
+  },
 })
 
-// Destroy editor instance on unmount
-onBeforeUnmount(() => {
-  editor.destroy()
-})
+// ----- Add Link -----
+const addLink = () => {
+  if (!editor.value) return
+  const url = window.prompt('Enter URL')
+  if (!url) return
 
-// ----- Add Blog -----
-const handleAddBlog = async () => {
-  try {
-    adding.value = true
-
-    // Send blog data to backend
-    const res = await api.post('/blogs/add', form, {
-      headers: { Authorization: `Bearer ${auth.token}` }
-    });
-
-    const newBlog = res.data; // <--- assign server response to newBlog
-
-    message.value = 'Blog added successfully. Redirecting...'
-    messageType.value = 'success'
-    setTimeout(() => message.value = '', 4000)
-
-    // Redirect after 3 seconds
-    setTimeout(() => {
-      router.push(`/blogs/post/${newBlog._id}`);
-    }, 3000);
-
-  } catch (err) {
-    message.value = err.response?.data?.message || err.message
-    messageType.value = 'error'
-  } finally {
-    adding.value = false
-  }
+  editor.value.chain()
+    .focus()
+    .extendMarkRange('link')
+    .setLink({ href: url, target: '_blank', rel: 'nofollow ugc noopener' })
+    .run()
 }
 
 // ----- Cancel Form -----
@@ -155,7 +159,45 @@ const cancelForm = () => {
     content: '',
     featuredImage: ''
   })
-  editor.commands.clearContent()
+
+  // Clear editor content safely
+  editor.value?.commands.clearContent()
+
+  // Navigate to user's posts
+  if (auth.user?.username) {
+    router.push(`/blogs/user/${auth.user.username}`)
+  } else {
+    router.push('/blogs/all')
+  }
+}
+
+const handleAddBlog = async () => {
+  if (!form.content || !form.title) {
+    message.value = "Title and content cannot be empty."
+    messageType.value = 'error'
+    return
+  }
+
+  try {
+    adding.value = true
+    const res = await api.post('/blogs/add', form, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+    const newBlog = res.data
+
+    message.value = 'Blog added successfully. Redirecting...'
+    messageType.value = 'success'
+
+    setTimeout(() => {
+      router.push(`/blogs/post/${newBlog._id}`)
+    }, 1500)
+
+  } catch (err) {
+    message.value = err.response?.data?.message || err.message
+    messageType.value = 'error'
+  } finally {
+    adding.value = false
+  }
 }
 
 // ----- Navigation -----
@@ -177,6 +219,11 @@ onMounted(async () => {
     }
   }
 })
+
+// ----- Unmount -----
+onBeforeUnmount(() => {
+  editor.value?.destroy()
+})
 </script>
 
 <style>
@@ -195,7 +242,7 @@ onMounted(async () => {
 /* Tiptap uses ProseMirror */
 /* Make the inner editable div fill the container */
 .ProseMirror {
-  min-height: 150px !important;        /* initial height */
+  min-height: 150px !important;
   outline: none !important;
   box-shadow: none !important;
   /*border: 1px solid #ced4da;*/

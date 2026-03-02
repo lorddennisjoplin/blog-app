@@ -7,24 +7,18 @@
     </div>
 
     <div v-else>
-
       <!-- OWNER EDIT FORM -->
-      <div v-if="isOwner && isEditRoute" class="card p-4 mt-3">
+      <div v-if="isOwner && isEditRoute" class="p-4 mt-3">
         <h1 class="mb-3">Edit Your Post</h1>
 
         <div
           v-if="message"
-          :class="[
-            'alert py-2',
-            messageType === 'success' ? 'alert-success' : 'alert-danger'
-          ]"
+          :class="['alert py-2', messageType === 'success' ? 'alert-success' : 'alert-danger']"
         >
           {{ message }}
         </div>
 
         <form @submit.prevent="handleEditBlog">
-
-          <!-- Title -->
           <input
             v-model="form.title"
             type="text"
@@ -35,41 +29,25 @@
 
           <!-- Tiptap Toolbar -->
           <div v-if="editor" class="mb-2">
-
-            <!-- Headings -->
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">H2</button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">H3</button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleHeading({ level: 4 }).run()">H4</button>
 
-            <!-- Text styles -->
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBold().run()"><strong>B</strong></button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleItalic().run()"><em>I</em></button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleStrike().run()"><s>S</s></button>
 
-            <!-- Links -->
-            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-              @click="addLink"
-            >
-              🔗 Link
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-              @click="editor.chain().focus().unsetLink().run()"
-            >
-              ❌ Remove Link
-            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="addLink">🔗 Link</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().unsetLink().run()">❌ Link</button>
 
-            <!-- Lists -->
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
             <button type="button" class="btn btn-sm btn-outline-secondary me-1" @click="editor.chain().focus().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
-
           </div>
 
-          <!-- Tiptap Editor -->
           <div v-if="editor" class="border rounded p-3 mb-3">
             <EditorContent :editor="editor" />
           </div>
 
-          <!-- Featured Image -->
           <input
             v-model="form.featuredImage"
             type="url"
@@ -78,57 +56,78 @@
             required
           />
 
-          <!-- Buttons -->
           <button class="btn btn-primary btn-sm me-2" :disabled="editing">
             <span v-if="editing">
               <span class="spinner-border spinner-border-sm me-1"></span>
               Saving...
             </span>
-            <span v-else>
-              Save Changes
-            </span>
+            <span v-else>Save Changes</span>
           </button>
 
-          <button
-            type="button"
-            class="btn btn-secondary btn-sm"
-            @click="router.push(`/blogs/post/${route.params.id}`)"
-          >
+          <button type="button" class="btn btn-secondary btn-sm" @click="router.push(`/blogs/post/${route.params.id}`)">
             Cancel
           </button>
-
         </form>
       </div>
 
       <!-- VIEW MODE -->
-      <div v-else-if="blog" class="card shadow-sm p-4 mt-3 col-md-8 mx-auto">
+      <div v-else-if="blog" class="row mt-3">
+        <div class="col-lg-9 col-12">
+          <h1 class="mb-2">{{ blog.title }}</h1>
+          <p class="fw-bold text-muted mb-2">
+            By {{ blog.author?.username || 'Unknown' }} &bull; {{ formattedDate }}
+            <span v-if="isOwner" class="ms-2">
+              &bull;
+              <a href="#" @click.prevent="editBlog(blog._id)" class="text-warning text-decoration-none ms-2">Edit Post</a>
+            </span>
+          </p>
 
-        <h1 class="card-title mb-2">{{ blog.title }}</h1>
+          <hr>
 
-        <p class="fw-bold text-muted mb-2">
-          By {{ blog.author?.username || 'Unknown' }} &bull; {{ formattedDate }}
-        </p>
+          <img
+            v-if="blog.featuredImage"
+            :src="blog.featuredImage"
+            class="img-fluid rounded mb-4"
+            style="width: 100%;"
+          />
 
-        <a
-          v-if="isOwner"
-          href="#"
-          @click.prevent="editBlog(blog._id)"
-          class="text-warning text-decoration-none"
-        >
-          Edit Post
-        </a>
+          <div v-html="blog.content" class="mb-3"></div>
 
-        <hr>
+          <!-- Comments Section -->
+          <div class="mt-5">
+            <hr class="mb-5">
+            <h2 class="mb-3">Comments</h2>
 
-        <img
-          v-if="blog.featuredImage"
-          :src="blog.featuredImage"
-          class="img-fluid rounded mb-4"
-          style="width: 100%;"
-        />
+            <div v-if="auth.user" class="mb-4">
+              <form @submit.prevent="submitComment">
+                <div class="mb-2">
+                  <textarea v-model="newComment" class="form-control" rows="3" placeholder="Write a comment..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary mt-2">Post Comment</button>
+              </form>
+            </div>
+            <div v-else class="text-muted mb-4">
+              <p>Please log in to post a comment.</p>
+            </div>
 
-        <div class="card-text mb-3" v-html="blog.content"></div>
+            <div v-if="comments.length > 0">
+              <div v-for="(comment, index) in comments" :key="comment._id || index" class="border rounded p-3 mb-2">
+                <p class="mb-1"><strong>{{ comment.user?.username || 'Unknown' }}</strong></p>
+                <p class="mb-0">{{ comment.comment }}</p>
+              </div>
+            </div>
+            <div v-else class="text-muted">
+              <p>No comments yet. Be the first to comment!</p>
+            </div>
+          </div>
+        </div>
 
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-12">
+          <div class="border p-3" style="min-height: 500px;">
+            <p class="text-muted">Sidebar reserved space</p>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -136,11 +135,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../services/api.js'
-
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -157,14 +155,14 @@ const editing = ref(false)
 const message = ref('')
 const messageType = ref('')
 
-// Form
+// Form (reactive) — **DO NOT USE .value**
 const form = reactive({
   title: '',
   content: '',
   featuredImage: ''
 })
 
-// Tiptap Editor
+// Editor
 const editor = useEditor({
   extensions: [
     StarterKit,
@@ -172,19 +170,16 @@ const editor = useEditor({
       openOnClick: true,
       autolink: true,
       linkOnPaste: true,
-      HTMLAttributes: {
-        target: '_blank',
-        rel: 'nofollow ugc noopener',
-      }
+      HTMLAttributes: { target: '_blank', rel: 'nofollow ugc noopener' }
     })
   ],
   content: '',
   onUpdate: ({ editor }) => {
-    form.content = editor.getHTML()
+    form.content = editor.getHTML() // reactive assignment
   }
 })
 
-// Add link function
+// Add link
 const addLink = () => {
   const url = window.prompt('Enter URL')
   if (url && editor.value) {
@@ -199,10 +194,7 @@ const addLink = () => {
 // Computed
 const isEditRoute = computed(() => route.path.includes('/edit/'))
 const isOwner = computed(() =>
-  auth.user &&
-  blog.value &&
-  blog.value.author &&
-  blog.value.author._id === auth.user._id
+  auth.user && blog.value && blog.value.author && blog.value.author._id === auth.user._id
 )
 const formattedDate = computed(() => {
   if (!blog.value?.createdAt) return ''
@@ -215,9 +207,16 @@ const loadBlog = async (id) => {
   try {
     const res = await api.get(`/blogs/post/${id}`)
     blog.value = res.data.blog
-    Object.assign(form, res.data.blog)
 
-    if (editor.value) editor.value.commands.setContent(res.data.blog.content || '')
+    // **Assign directly, do not use .value**
+    form.title = blog.value.title
+    form.content = blog.value.content
+    form.featuredImage = blog.value.featuredImage
+
+    if (editor.value) editor.value.commands.setContent(blog.value.content || '')
+
+    // Fetch comments after loading blog
+    fetchComments(id)
 
   } catch (err) {
     console.error(err)
@@ -237,25 +236,20 @@ const editBlog = (id) => router.push(`/blogs/edit/${id}`)
 const handleEditBlog = async () => {
   try {
     editing.value = true
-
     const res = await api.patch(`/blogs/edit/${route.params.id}`, form)
 
     message.value = "Blog updated successfully."
     messageType.value = "success"
 
-    // Update local blog object immediately with populated author
     if (res.data.updatedBlog) {
       blog.value = res.data.updatedBlog
       form.title = blog.value.title
       form.content = blog.value.content
       form.featuredImage = blog.value.featuredImage
 
-      if (editor.value) {
-        editor.value.commands.setContent(blog.value.content || '')
-      }
+      if (editor.value) editor.value.commands.setContent(blog.value.content || '')
     }
 
-    // Optional: redirect after 1.5s
     setTimeout(() => {
       router.push(`/blogs/post/${route.params.id}`)
     }, 1500)
@@ -266,6 +260,34 @@ const handleEditBlog = async () => {
     messageType.value = "error"
   } finally {
     editing.value = false
+  }
+}
+
+// ----- Comments -----
+const comments = ref([])
+const newComment = ref('')
+
+const fetchComments = async (postId) => {
+  try {
+    const res = await api.get(`/blogs/getComments/${postId}`)
+    comments.value = res.data.comments || []
+  } catch (err) {
+    console.error('Failed to fetch comments:', err)
+  }
+}
+
+const submitComment = async () => {
+  if (!newComment.value.trim()) return
+  try {
+    const res = await api.post(
+      `/blogs/addComment/${blog.value._id}`,
+      { comment: newComment.value },
+      { headers: { Authorization: `Bearer ${auth.token}` } }
+    )
+    comments.value.push(res.data.comment)
+    newComment.value = ''
+  } catch (err) {
+    console.error('Failed to post comment:', err)
   }
 }
 </script>

@@ -1,58 +1,76 @@
 <template>
   <div class="container my-5 text-start">
-    <h1 class="mb-4">All Posts</h1>
+    <h1 class="mb-4">{{pageTitle}}</h1>
 
     <div class="row">
       <!-- Main content: 80% -->
       <div class="col-md-9">
-        <div v-if="loading" class="alert alert-info py-2">Loading blogs...</div>
+        <div v-if="loading" class="alert alert-info py-2">Loading posts...</div>
 
         <div v-else>
-          <div v-for="blog in blogs" :key="blog._id" class="row mb-3 align-items-center">
-            <!-- Text column: full width on small screens -->
-            <div class="col-12 col-lg-8 d-flex flex-column justify-content-between">
-              <h3>{{ blog.title }}</h3>
-              <p class="text-muted mb-1">
-                By {{ blog.author?.username || 'Unknown' }} &bull; {{ blog.formattedDate }}
-              </p>
-              <p class="mb-2">{{ stripAndTruncate(blog.content, 150) }}</p>
+          <div v-if="blogs.length === 0" class="alert alert-warning py-2">
+            <template v-if="isUserPage">
+              {{ auth.user && auth.user.username === username ? 'You have no posts yet.' : 'No posts found for this user.' }}
+            </template>
+            <template v-else>
+              No posts found.
+            </template>
+          </div>
+          <div v-else>
+            <div v-for="blog in blogs" :key="blog._id" class="row mb-3 align-items-center">
+              <!-- Text column: full width on small screens -->
+              <div class="col-12 col-lg-8 d-flex flex-column justify-content-between">
+                <h2><a href="#" @click="goToBlog(blog._id)" class="text-decoration-none text-dark">{{ blog.title }}</a></h2>
+                <p class="text-muted mb-1">
+                  By
+                  <RouterLink 
+                    v-if="blog.author?.username" 
+                    :to="`/blogs/user/${blog.author.username}`" 
+                    class="text-decoration-none fw-bold"
+                  >
+                  {{ blog.author?.username || 'Unknown' }}
+                </RouterLink>
+                &bull; {{ blog.formattedDate }}
+                </p>
+                <p class="my-3">{{ stripAndTruncate(blog.content, 150) }}</p>
 
-              <!-- Buttons -->
-              <div>
-                <i class="bi bi-chat"></i> Comment
-                <span v-if="auth.user && blog.author && blog.author._id === auth.user._id" class="ms-2">
-                  &bull;
-                <a href="#"
-                  
-                  class="text-primary text-decoration-none ms-2"
-                  @click="editBlog(blog._id)"
-                ><i class="bi bi-pencil"></i> Edit Post</a></span>
-                <span v-if="auth.isAdmin || (auth.user && blog.author && blog.author._id === auth.user._id)" class="ms-2">
-                  &bull;
-                <a href="#"
-                  
-                  class="text-danger text-decoration-none ms-2"
-                  @click="DeleteBlog(blog._id)"
-                ><i class="bi bi-trash"></i> Delete Post</a></span>
-                <!-- <button class="btn btn-sm btn-secondary" @click="goToBlog(blog._id)">
-                  Read Post
-                </button> -->
+                <!-- Buttons -->
+                <div class="mt-2">
+                  <i class="bi bi-chat"></i> Comment
+                  <span v-if="auth.user && blog.author && blog.author._id === auth.user._id" class="ms-2">
+                    &bull;
+                  <a href="#"
+                    
+                    class="text-primary text-decoration-none ms-2"
+                    @click="editBlog(blog._id)"
+                  ><i class="bi bi-pencil"></i> Edit Post</a></span>
+                  <span v-if="auth.isAdmin || (auth.user && blog.author && blog.author._id === auth.user._id)" class="ms-2">
+                    &bull;
+                  <a href="#"
+                    
+                    class="text-danger text-decoration-none ms-2"
+                    @click="DeleteBlog(blog._id)"
+                  ><i class="bi bi-trash"></i> Delete Post</a></span>
+                  <!-- <button class="btn btn-sm btn-secondary" @click="goToBlog(blog._id)">
+                    Read Post
+                  </button> -->
+                </div>
               </div>
-            </div>
 
-            <!-- Image column: small image -->
-            <div class="col-12 mt-4 mt-lg-0 col-lg-4 d-flex align-items-center justify-content-center">
-              <div style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; cursor: pointer;" @click="goToBlog(blog._id)">
-                <img
-                  :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
-                  class="img-fluid w-100 h-100"
-                  style="object-fit: cover;"
-                />
+              <!-- Image column: small image -->
+              <div class="col-12 mt-4 mt-lg-0 col-lg-4 d-flex align-items-center justify-content-center">
+                <div style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; cursor: pointer;" @click="goToBlog(blog._id)">
+                  <img
+                    :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
+                    class="img-fluid w-100 h-100"
+                    style="object-fit: cover;"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div class="col-12">
-              <hr class="mt-4" />
+              <div class="col-12">
+                <hr class="mt-4" />
+              </div>
             </div>
           </div>
         </div>
@@ -70,13 +88,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../services/api.js'; 
 
 const auth = useUserStore()
 const router = useRouter()
+
+const route = useRoute()
+const username = computed(() => route.params.username || null)
 
 // Message system
 const showForm = ref(false)
@@ -95,6 +116,22 @@ const blogs = ref([])
 const loading = ref(true)
 const itemsPerPage = 10
 const currentPage = ref(1)
+
+// Check if we are on a user page
+const isUserPage = computed(() => !!route.params.username)
+
+// Compute page title
+const pageTitle = computed(() => {
+  if (!isUserPage.value) return 'All Posts'
+
+  // If logged-in user is viewing their own profile
+  if (auth.user && auth.user.username === route.params.username) {
+    return 'My Posts'
+  }
+
+  // Viewing someone else's profile
+  return `${route.params.username}'s Posts`
+})
 
 // Helper to format dates
 const formatDate = (isoString) => {
@@ -137,17 +174,28 @@ const paginatedBlogs = computed(() => {
   return blogs.value.slice(start, start + itemsPerPage)
 })
 
+watch(() => route.params.username, () => {
+  fetchBlogs()
+})
+
 // Fetch all blogs
 const fetchBlogs = async () => {
   loading.value = true
   try {
-    const res = await api.get("/blogs/all") // API should populate author
+    let url = "/blogs/all"
+
+    if (username.value) {
+      // Fetch blogs of a specific user
+      url = `/blogs/user/${username.value}`
+    }
+
+    const res = await api.get(url) // API should populate author
     let fetched = res.data.blogs || []
 
-    // Sort by creation date (newest first)
+    // Sort newest first
     fetched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
-    // Add formattedDate to each blog
+    // Add formattedDate
     blogs.value = fetched.map(blog => ({
       ...blog,
       formattedDate: formatDate(blog.createdAt)
@@ -159,39 +207,10 @@ const fetchBlogs = async () => {
   } catch (err) {
     console.error("Failed to fetch blogs:", err)
     blogs.value = []
-    message.value = err.response?.data?.message || "Failed to fetch blogs."
+    message.value = err.response?.data?.message || "Failed to fetch posts."
     messageType.value = "error"
   } finally {
     loading.value = false
-  }
-}
-
-// Add blog
-const handleAddBlog = async () => {
-  try {
-    adding.value = true
-    const res = await api.post('/blogs/addBlog', form)
-
-    // Add formattedDate to the new blog
-    const newBlog = {
-      ...res.data,
-      formattedDate: formatDate(res.data.createdAt)
-    }
-
-    blogs.value.unshift(newBlog)
-    currentPage.value = 1
-
-    cancelForm()
-
-    message.value = 'Blog added successfully.'
-    messageType.value = 'success'
-    setTimeout(() => message.value = '', 1500)
-
-  } catch (err) {
-    message.value = err.response?.data?.message || err.message
-    messageType.value = 'error'
-  } finally {
-    adding.value = false
   }
 }
 

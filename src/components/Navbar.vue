@@ -29,14 +29,14 @@
               </RouterLink>
             </li>
 
-            <li class="nav-item">
-					  <RouterLink
-					    class="nav-link"
-					    :to="`/blogs/user/${auth.user.username}`"
-					  >
-                <i class="bi bi-pencil"></i> My Posts
-              </RouterLink>
-            </li>
+            <li v-if="auth.user" class="nav-item">
+						  <RouterLink
+						    class="nav-link"
+						    :to="`/blogs/user/${auth.user.username}`"
+						  >
+						    <i class="bi bi-pencil"></i> My Posts
+						  </RouterLink>
+						</li>
 
             <li class="nav-item">
               <RouterLink class="nav-link" to="/blogs/add">
