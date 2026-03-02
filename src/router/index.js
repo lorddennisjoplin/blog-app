@@ -3,8 +3,8 @@ import { useUserStore } from "../stores/user";
 
 import Login from "../pages/LoginPage.vue";
 import Register from "../pages/RegisterPage.vue";
-import Blogs from ".../pages/Blogs.vue";
-import AddBlog from ".../pages/AddBlog.vue";
+import Blogs from "../pages/Blogs.vue";
+import AddBlog from "../pages/AddBlog.vue";
 import EditBlog from "../pages/EditBlog.vue";
 // import User from "../pages/User.vue";
 
@@ -12,7 +12,7 @@ const routes = [
   { path: "/login", component: Login },
   { path: "/register", component: Register },
   { path: "/blogs", component: Blogs },
-  { path: "/blogs/add", component: Blogs },
+  { path: "/blogs/add", component: AddBlog },
   { path: "/blogs/blog/:id", component: EditBlog },
   // { path: "/user", component: User },
   { path: "/", redirect: "/blogs" },
