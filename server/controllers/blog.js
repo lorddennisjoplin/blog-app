@@ -95,7 +95,7 @@ module.exports.getBlogPostById = (req, res) => {
               return res.status(200).json({ blog });
               
           } else {
-              return res.status(404).json({ message: 'Blog not found.' });
+              return res.status(404).json({ message: 'Post not found.' });
           }
       })
       .catch(error => errorHandler(error, req, res));
@@ -123,14 +123,14 @@ module.exports.updateBlogPost = async (req, res) => {
     const blog = await Blog.findById(req.params.blogId);
 
     if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
+      return res.status(404).json({ message: "Post not found" });
     }
 
     // Authorization check
     const isOwner = blog.author.toString() === req.user.id.toString();
     if (!isOwner) {
       return res.status(403).json({
-        message: "Forbidden: You are not allowed to update this blog post.",
+        message: "Forbidden: You are not allowed to update this post.",
       });
     }
 
@@ -145,7 +145,7 @@ module.exports.updateBlogPost = async (req, res) => {
     ).populate('author', 'username'); // <-- populate only username
 
     return res.status(200).json({
-      message: "Blog post updated successfully.",
+      message: "Post updated successfully.",
       updatedBlog: result,
     });
 
@@ -164,14 +164,14 @@ module.exports.deleteBlogPost = async (req, res) => {
 
     // Validate ObjectId first
     if (!blogId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ message: "Invalid blog post ID." });
+      return res.status(400).json({ message: "Invalid post ID." });
     }
 
     // Find the blog first
     const blog = await Blog.findById(blogId).exec();
 
     if (!blog) {
-      return res.status(404).json({ message: "Blog post not found." });
+      return res.status(404).json({ message: "Post not found." });
     }
 
     // Authorization check
@@ -180,14 +180,14 @@ module.exports.deleteBlogPost = async (req, res) => {
 
     if (!isAdmin && !isOwner) {
       return res.status(403).json({
-        message: "Forbidden: You are not allowed to delete this blog post.",
+        message: "Forbidden: You are not allowed to delete this post.",
       });
     }
 
     // Delete the blog
     await Blog.findByIdAndDelete(blogId).exec();
 
-    return res.status(200).json({ message: "Blog post deleted successfully." });
+    return res.status(200).json({ message: "Post deleted successfully." });
 
   } catch (error) {
     return res.status(500).json({ message: "Internal server error." });
@@ -206,7 +206,7 @@ module.exports.addBlogComment = async (req, res) => {
     const blog = await Blog.findById(req.params.blogId);
 
     if (!blog) {
-      return res.status(404).json({ message: "Blog post not found." });
+      return res.status(404).json({ message: "Post not found." });
     }
 
     // Ensure req.user exists
@@ -246,7 +246,7 @@ module.exports.getBlogComments = async (req, res) => {
     const blog = await Blog.findById(blogId).populate("comments.userId", "username email");
 
     if (!blog) {
-      return res.status(404).json({ message: "Blog post not found." });
+      return res.status(404).json({ message: "Post not found." });
     }
 
     // Return only comments
@@ -274,7 +274,7 @@ module.exports.deleteBlogComment = async (req, res) => {
     // Find the blog that contains this comment
     const blog = await Blog.findOne({ "comments._id": commentId });
     if (!blog) {
-      return res.status(404).json({ message: "Comment or blog post not found." });
+      return res.status(404).json({ message: "Comment or post not found." });
     }
 
     // Find the comment index

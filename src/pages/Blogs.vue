@@ -9,8 +9,11 @@
 
         <div v-else>
           <div v-if="blogs.length === 0" class="alert alert-warning py-2">
-            <template v-if="isUserPage">
-              {{ auth.user && auth.user.username === username ? 'You have no posts yet.' : 'No posts found for this user.' }}
+            <template v-if="!auth.user">
+              Please log in to see posts.
+            </template>
+            <template v-else-if="isUserPage">
+              {{ auth.user.username === username ? 'You have no posts yet.' : 'No posts found for this user.' }}
             </template>
             <template v-else>
               No posts found.
