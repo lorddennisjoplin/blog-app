@@ -94,7 +94,7 @@
           <div v-html="blog.content" class="mb-3"></div>
 
           <!-- Comments Section -->
-          <div class="mt-5">
+          <div class="my-5">
             <hr class="mb-5">
             <h2 class="mb-3">Comments</h2>
 
@@ -111,9 +111,18 @@
             </div>
 
             <div v-if="comments.length > 0">
-              <div v-for="(comment, index) in comments" :key="comment._id || index" class="border rounded p-3 mb-2">
-                <p class="mb-1"><strong>{{ comment.userId?.username || 'Unknown' }}</strong></p>
+              <div v-for="(comment, index) in comments" :key="comment._id || index" class="border rounded p-3 mb-2 bg-info">
+                <p class="mb-1">
+                  <strong>{{ comment.userId?.username || 'Unknown' }}</strong>
+                  <small class="text-muted ms-2">{{ formatDate(comment.createdAt) || 'Unknown Date' }}</small>
+                </p>
                 <p class="mb-0">{{ comment.comment }}</p>
+
+                <p v-if="auth.isAdmin" class="mt-3 mb-0">
+                  <a href="#" class="text-danger text-decoration-none" @click.prevent="deleteComment(comment._id)">
+                    Delete
+                  </a>
+                </p>
               </div>
             </div>
             <div v-else class="text-muted">
@@ -200,6 +209,17 @@ const formattedDate = computed(() => {
   if (!blog.value?.createdAt) return ''
   return new Date(blog.value.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 })
+
+// Simple date formatter
+const formatDate = (isoString) => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }) // e.g., "02 Mar 2026"
+}
 
 // Load blog
 const loadBlog = async (id) => {
@@ -288,6 +308,23 @@ const submitComment = async () => {
     newComment.value = ''
   } catch (err) {
     console.error('Failed to post comment:', err)
+  }
+}
+
+// Delete a comment (admin only)
+const deleteComment = async (commentId) => {
+  if (!confirm("Are you sure you want to delete this comment?")) return
+
+  try {
+    await api.delete(`/blogs/deleteComment/${commentId}`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+
+    // Remove from local comments array
+    comments.value = comments.value.filter(c => c._id !== commentId)
+  } catch (err) {
+    console.error("Failed to delete comment:", err)
+    alert(err?.response?.data?.message || "Failed to delete comment")
   }
 }
 </script>

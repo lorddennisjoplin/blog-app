@@ -269,12 +269,12 @@ module.exports.deleteBlogComment = async (req, res) => {
       return res.status(403).json({ message: "Only admins can delete comments." });
     }
 
-    const { blogId, commentId } = req.params;
+    const { commentId } = req.params;
 
-    const blog = await Blog.findById(blogId);
-
+    // Find the blog that contains this comment
+    const blog = await Blog.findOne({ "comments._id": commentId });
     if (!blog) {
-      return res.status(404).json({ message: "Blog post not found." });
+      return res.status(404).json({ message: "Comment or blog post not found." });
     }
 
     // Find the comment index
@@ -294,7 +294,7 @@ module.exports.deleteBlogComment = async (req, res) => {
 
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid blog post or comment ID." });
+      return res.status(400).json({ message: "Invalid comment ID." });
     }
     return errorHandler(error, req, res);
   }
