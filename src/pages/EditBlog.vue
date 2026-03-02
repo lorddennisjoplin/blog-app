@@ -156,9 +156,35 @@
         <!-- Sidebar -->
         <div class="col-lg-3 col-12">
           <div class="border p-3" style="min-height: 500px;">
-            <p class="text-muted">Sidebar reserved space</p>
+            <h3 class="fw-bold mb-3">Latest Posts</h3>
+            <div v-if="latestPosts.length > 0">
+              <div
+                v-for="(post, index) in latestPosts"
+                :key="post._id"
+                :class="index === latestPosts.length - 1 ? 'mb-0' : 'mb-3'"
+              >
+                <RouterLink :to="`/posts/view/${post._id}`" class="text-decoration-none">
+                  <img
+                    v-if="post.featuredImage"
+                    :src="post.featuredImage"
+                    class="img-fluid mb-1 rounded"
+                    style="max-width: 100%; object-fit: cover;"
+                  />
+                  <h4
+                    class="mt-2"
+                    :class="index === latestPosts.length - 1 ? 'mb-0' : 'mb-4'"
+                  >
+                    {{ post.title }}
+                  </h4>
+                </RouterLink>
+              </div>
+            </div>
+            <div v-else class="text-muted">
+              <p>No other posts yet.</p>
+            </div>
           </div>
         </div>
+
       </div>
 
     </div>
@@ -186,6 +212,7 @@ const editing = ref(false)
 const message = ref('')
 const messageType = ref('')
 const submittingComment = ref(false)
+const latestPosts = ref([])
 
 // Form (reactive)
 const form = reactive({
@@ -269,15 +296,17 @@ const loadBlog = async (id) => {
     const res = await api.get(`/posts/view/${id}`)
     blog.value = res.data.blog
 
-    // **Assign directly, do not use .value**
     form.title = blog.value.title
     form.content = blog.value.content
     form.featuredImage = blog.value.featuredImage
 
     if (editor.value) editor.value.commands.setContent(blog.value.content || '')
 
-    // Fetch comments after loading blog
+    // Fetch comments
     fetchComments(id)
+
+    // Fetch latest 5 posts for sidebar
+    fetchLatestPosts(id)
 
   } catch (err) {
     console.error(err)
@@ -395,4 +424,13 @@ watch(
   },
   { immediate: true }
 )
+
+const fetchLatestPosts = async (excludeId) => {
+  try {
+    const res = await api.get(`/posts/all?limit=5&excludeId=${excludeId}`)
+    latestPosts.value = res.data.blogs || []
+  } catch (err) {
+    console.error(err)
+  }
+}
 </script>
