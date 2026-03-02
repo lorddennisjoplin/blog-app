@@ -38,7 +38,7 @@
             <tbody>
               <tr v-for="blog in paginatedBlogs" :key="blog._id">
                 <td class="text-center">
-                  <img :src="blog.image || 'https://placehold.co/400x400?text=No+Image'" width="150" class="img-fluid" />
+                  <img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="img-fluid" />
                 </td>
                 <td class="text-center">{{ blog.title }}</td>
                 <td class="text-center">{{ blog.director }}</td>
@@ -86,15 +86,16 @@
         <div
           v-for="blog in blogs"
           :key="blog._id"
-          class="col-12 col-md-4 mb-4"
+          class="col-12 col-md-3 mb-3"
         >
           <div class="card h-100 shadow-sm">
             <div class="card-body d-flex flex-column">
-              <a href="#"><img :src="blog.image || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToBlog(blog._id)" /></a>
+              <a href="#"><img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToBlog(blog._id)" /></a>
               <h3 class="card-title">{{ blog.title }}</h3>
-              <h6 class="card-subtitle mb-2 text-muted">{{ blog.director }} ({{ blog.year }})</h6>
-              <p class="text-success mb-3">{{ blog.genre }}</p>
-              <button class="btn btn-primary" @click="goToBlog(blog._id)">View Blog Details</button>
+              <h6 class="card-subtitle mb-3 text-muted">
+                By {{ blog.author?.name || 'Unknown' }}
+              </h6>
+              <button class="btn btn-primary" @click="goToBlog(blog._id)">Read Post</button>
             </div>
           </div>
         </div>

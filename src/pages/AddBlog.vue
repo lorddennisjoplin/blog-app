@@ -129,6 +129,8 @@ const handleAddBlog = async () => {
     message.value = 'Blog added successfully. Redirecting...'
     messageType.value = 'success'
     setTimeout(() => message.value = '', 1500)
+
+    router.push(`/blogs/blog/${newBlog._id}`);
   } catch (err) {
     message.value = err.response?.data?.message || err.message
     messageType.value = 'error'

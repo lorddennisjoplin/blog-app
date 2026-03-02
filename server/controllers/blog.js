@@ -60,15 +60,16 @@ module.exports.addBlogPost = async (req, res) => {
 };
 
 module.exports.getAllBlogPosts = (req, res) => {
-    return Blog.find({})
-        .then(result => {
-            if (result.length > 0) {
-                return res.status(200).json({ blogs: result });
-            } else {
-                return res.status(404).json({ message: 'No blogs found.' });
-            }
-        })
-        .catch(error => errorHandler(error, req, res));
+  return Blog.find({})
+    .populate('author', 'name email') // <-- populate author details
+    .then(result => {
+      if (result.length > 0) {
+        return res.status(200).json({ blogs: result });
+      } else {
+        return res.status(404).json({ message: 'No blogs found.' });
+      }
+    })
+    .catch(error => errorHandler(error, req, res));
 };
 
 module.exports.getBlogPostById = (req, res) => {
