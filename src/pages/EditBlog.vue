@@ -10,7 +10,7 @@
 
       <!-- OWNER EDIT FORM -->
       <div v-if="isOwner && isEditRoute" class="card p-4 mt-3">
-        <h1 class="mb-3">Edit Post</h1>
+        <h1 class="mb-3">Edit Your Post</h1>
 
         <div
           v-if="message"

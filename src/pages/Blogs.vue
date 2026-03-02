@@ -27,6 +27,13 @@
                   class="text-primary text-decoration-none ms-2"
                   @click="editBlog(blog._id)"
                 ><i class="bi bi-pencil"></i> Edit Post</a></span>
+                <span v-if="auth.isAdmin || (auth.user && blog.author && blog.author._id === auth.user._id)" class="ms-2">
+                  &bull;
+                <a href="#"
+                  
+                  class="text-danger text-decoration-none ms-2"
+                  @click="DeleteBlog(blog._id)"
+                ><i class="bi bi-trash"></i> Delete Post</a></span>
                 <!-- <button class="btn btn-sm btn-secondary" @click="goToBlog(blog._id)">
                   Read Post
                 </button> -->
@@ -35,12 +42,13 @@
 
             <!-- Image column: small image -->
             <div class="col-12 mt-4 mt-lg-0 col-lg-4 d-flex align-items-center justify-content-center">
-              <img
-                :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
-                class="img-fluid"
-                style="max-height: 120px; object-fit: cover;"
-                @click="goToBlog(blog._id)"
-              />
+              <div style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; cursor: pointer;" @click="goToBlog(blog._id)">
+                <img
+                  :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
+                  class="img-fluid w-100 h-100"
+                  style="object-fit: cover;"
+                />
+              </div>
             </div>
 
             <div class="col-12">
@@ -186,7 +194,7 @@ const editBlog = (id) => router.push(`/blogs/edit/${id}`)
 
 const DeleteBlog = async (blogId) => {
   try {
-    if (!confirm("Are you sure you want to delete this post?")) return;
+    if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
     await api.delete(`/blogs/delete/${blogId}`);
     console.log(blogId);
     blogs.value = blogs.value.filter(w => w._id !== blogId);

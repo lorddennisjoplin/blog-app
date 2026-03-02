@@ -76,11 +76,6 @@ module.exports.getBlogPostById = (req, res) => {
       .catch(error => errorHandler(error, req, res));
 };
 
-// controllers/blogController.js
-
-const Blog = require('../models/Blog'); // adjust path if needed
-const errorHandler = require('../utils/errorHandler'); // your error handler
-
 module.exports.updateBlogPost = async (req, res) => {
   try {
     if (!req.user) {
