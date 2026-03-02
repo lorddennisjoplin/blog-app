@@ -93,7 +93,7 @@
               <a href="#"><img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToBlog(blog._id)" /></a>
               <h3 class="card-title">{{ blog.title }}</h3>
               <h6 class="card-subtitle mb-3 text-muted">
-                By {{ blog.author?.name || 'Unknown' }}
+                By {{ blog.author?.username || 'Unknown' }}
               </h6>
               <button class="btn btn-primary" @click="goToBlog(blog._id)">Read Post</button>
             </div>

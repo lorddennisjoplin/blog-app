@@ -3,7 +3,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="alert alert-info py-2">
-      Loading movie...
+      Loading blog post...
     </div>
 
     <!-- After Loading -->
@@ -11,7 +11,7 @@
 
       <!-- ADMIN: EDIT MOVIE FORM -->
       <div v-if="auth.isAdmin" class="card p-4 mt-3">
-        <h1 class="mb-3">Edit Movie</h1>
+        <h1 class="mb-3">Edit Blog</h1>
 
         <div
           v-if="message"
@@ -23,7 +23,7 @@
           {{ message }}
         </div>
 
-        <form @submit.prevent="handleEditMovie">
+        <form @submit.prevent="handleEditBlog">
           <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
           <input v-model="form.director" type="text" class="form-control mb-2" placeholder="Director" required />
           <input v-model="form.year" type="text" class="form-control mb-2" placeholder="Year" pattern="\d{4}" title="Year must be 4 digits" required />
@@ -46,17 +46,12 @@
       </div>
 
       <!-- NON-ADMIN: SEE MOVIE DETAILS -->
-      <div v-else-if="movie" class="card shadow-sm p-4 mt-3 col-md-6 mx-auto">
-        <h1 class="card-title mb-0">{{ movie.title }}</h1>
+      <div v-else-if="blog" class="card shadow-sm p-4 mt-3 col-md-6 mx-auto">
+        <h1 class="card-title mb-2">{{ blog.title }}</h1>
+        <p class="fw-bold text-muted mb-0">By {{ blog.author?.username || 'Unknown' }}</p>
         <hr>
-        <p class="card-img mb-4"><img v-if="movie.image" :src="movie.image" style="width: 100%;" class="img-fluid rounded" /></p>
-        <p class="card-text mb-3">
-          {{ movie.description }}
-        </p>
-        <p class="fw-bold text-muted lead mb-0">{{ movie.director }} ({{ movie.year }})</p>
-        <p class="mb-3"><strong>Genre:</strong> {{ movie.genre }}</p>
-
-        <button class="btn btn-primary" @click="goToMovies()">See All Movies</button>
+        <p class="card-img mb-4"><img v-if="blog.featuredImage" :src="blog.featuredImage" style="width: 100%;" class="img-fluid rounded" /></p>
+        <div class="card-text mb-3" v-html="blog.content"></div>
       </div>
     </div>
   </div>
@@ -72,7 +67,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useUserStore()
 
-const movie = ref(null)
+const blog = ref(null)
 const loading = ref(true)
 const editing = ref(false)
 const errorMessage = ref("")
@@ -82,22 +77,19 @@ const messageType = ref('')
 
 const form = reactive({
   title: '',
-  director: '',
-  year: '',
-  description: '',
-  genre: '',
-  image: ''
+  content: '',
+  featuredImage: ''
 })
 
-const moreMovies = ref([])
+const moreBlogs = ref([])
 
-// Load movie
+// Load blog
 onMounted(async () => {
   try {
-    const res = await api.get(`/movies/getMovie/${route.params.id}`);
+    const res = await api.get(`/blogs/post/${route.params.id}`);
 
-    Object.assign(form, res.data.movie);
-    movie.value = res.data.movie;
+    Object.assign(form, res.data.blog);
+    blog.value = res.data.blog;
   } catch (err) {
     console.error(err);
   } finally {
@@ -106,25 +98,25 @@ onMounted(async () => {
 });
 
 
-const goToMovies = (id) => router.push(`/movies`)
+const goToBlogs = (id) => router.push(`/blogs`)
 
-const handleEditMovie = async () => {
+const handleEditBlog = async () => {
   try {
     editing.value = true
-    await api.patch(`/movies/updateMovie/${route.params.id}`, form)
+    await api.patch(`/blogs/updateBlog/${route.params.id}`, form)
 
     // Show confirmation message
-    message.value = "Movie updated successfully."
+    message.value = "Blog updated successfully."
     messageType.value = "success"
 
     // Wait 3 seconds then redirect
     setTimeout(() => {
-      router.push("/movies")
+      router.push("/blogs")
     }, 1500)
 
   } catch (err) {
     console.error(err)
-    message.value = err.response?.data?.message || "Failed to update movie."
+    message.value = err.response?.data?.message || "Failed to update blog."
     messageType.value = "error"
   } finally {
     editing.value = false

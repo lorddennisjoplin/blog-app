@@ -61,7 +61,7 @@ module.exports.addBlogPost = async (req, res) => {
 
 module.exports.getAllBlogPosts = (req, res) => {
   return Blog.find({})
-    .populate('author', 'name email') // <-- populate author details
+    .populate('author', 'username email') // <-- populate author details
     .then(result => {
       if (result.length > 0) {
         return res.status(200).json({ blogs: result });

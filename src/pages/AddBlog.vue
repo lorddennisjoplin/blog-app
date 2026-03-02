@@ -123,14 +123,23 @@ onBeforeUnmount(() => {
 const handleAddBlog = async () => {
   try {
     adding.value = true
+
+    // Send blog data to backend
     const res = await api.post('/blogs/add', form, {
       headers: { Authorization: `Bearer ${auth.token}` }
     });
+
+    const newBlog = res.data; // <--- assign server response to newBlog
+
     message.value = 'Blog added successfully. Redirecting...'
     messageType.value = 'success'
-    setTimeout(() => message.value = '', 1500)
+    setTimeout(() => message.value = '', 4000)
 
-    router.push(`/blogs/blog/${newBlog._id}`);
+    // Redirect after 3 seconds
+    setTimeout(() => {
+      router.push(`/blogs/post/${newBlog._id}`);
+    }, 3000);
+
   } catch (err) {
     message.value = err.response?.data?.message || err.message
     messageType.value = 'error'
