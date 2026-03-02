@@ -14,6 +14,7 @@ const routes = [
   { path: "/blogs", component: Blogs },
   { path: "/blogs/add", component: AddBlog },
   { path: "/blogs/post/:id", component: EditBlog },
+  { path: "/blogs/edit/:id", component: EditBlog },
   // { path: "/user", component: User },
   { path: "/", redirect: "/blogs" },
 ];

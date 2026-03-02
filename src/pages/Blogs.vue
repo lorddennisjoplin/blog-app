@@ -2,104 +2,60 @@
   <div class="container my-5 text-start">
     <h1 class="mb-4">All Blogs</h1>
 
-    <div v-if="auth.isAdmin" class="mb-3">
-      <button class="btn btn-sm btn-primary me-2" id="addBlog" @click="showForm = !showForm">
-        Add Blog
-      </button>
-    </div>
+    <div class="row">
+      <!-- Main content: 80% -->
+      <div class="col-md-9">
+        <div v-if="loading" class="alert alert-info py-2">Loading blogs...</div>
 
-    <div
-      v-if="message"
-      :class="[
-        'alert py-2',
-        messageType === 'success' ? 'alert-success' : 'alert-danger'
-      ]"
-    >
-      {{ message }}
-    </div>
-
-    <div class="mt-4 text-start">
-      <div v-if="loading" class="alert alert-info py-2">Loading blogs...</div>
-
-      <div v-else-if="paginatedBlogs.length && auth.isAdmin">
-        <div class="table-responsive">
-          <table class="table table-bordered">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">Featured Image</th>
-                <th class="text-center">Title</th>
-                <th class="text-center">Content</th>
-                <th class="text-center">Author</th>
-                <th class="text-center">Date</th>
-                <th class="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="blog in paginatedBlogs" :key="blog._id">
-                <td class="text-center">
-                  <img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="img-fluid" />
-                </td>
-                <td class="text-center">{{ blog.title }}</td>
-                <td class="card-text mb-3">
-                  {{ stripAndTruncate(blog.content, 150) }}
-                </td>
-                <td class="text-center">{{ blog.author?.username || 'Unknown' }}</td>
-                <td class="text-center">{{ blog.formattedDate }}</td>
-                <td class="text-center" style="white-space: nowrap;">
-                  <button class="btn btn-sm btn-primary me-2" @click="editBlog(blog._id)">
-                    Edit
-                  </button>
-                  <button class="btn btn-sm btn-danger" @click="DeleteBlog(blog._id)">
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <nav v-if="totalPages > 1" class="mt-3">
-          <ul class="pagination justify-content-center">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button class="page-link" @click="currentPage--" :disabled="currentPage === 1">Previous</button>
-            </li>
-
-            <li
-              v-for="page in totalPages"
-              :key="page"
-              class="page-item"
-              :class="{ active: page === currentPage }"
-            >
-              <button class="page-link" @click="currentPage = page">{{ page }}</button>
-            </li>
-
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button class="page-link" @click="currentPage++" :disabled="currentPage === totalPages">Next</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-
-      <div v-else>
-        <div class="row">
-        <div
-          v-for="blog in blogs"
-          :key="blog._id"
-          class="col-12 col-md-3 mb-3"
-        >
-          <div class="card h-100 shadow-sm">
-            <div class="card-body d-flex flex-column">
-              <a href="#"><img :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'" width="150" class="card-img mb-4 img-fluid" @click="goToBlog(blog._id)" /></a>
-              <h3 class="card-title">{{ blog.title }}</h3>
-              <h6 class="card-subtitle mb-3 text-muted">
+        <div v-else>
+          <div v-for="blog in blogs" :key="blog._id" class="row mb-3 align-items-center">
+            <!-- Text column: full width on small screens -->
+            <div class="col-12 col-lg-8 d-flex flex-column justify-content-between">
+              <h3>{{ blog.title }}</h3>
+              <p class="text-muted mb-1">
                 By {{ blog.author?.username || 'Unknown' }} &bull; {{ blog.formattedDate }}
-              </h6>
-              <button class="btn btn-primary" @click="goToBlog(blog._id)">Read Post</button>
+              </p>
+              <p class="mb-2">{{ stripAndTruncate(blog.content, 150) }}</p>
+
+              <!-- Buttons -->
+              <div>
+                <i class="bi bi-chat"></i> Comment
+                <span v-if="auth.user && blog.author && blog.author._id === auth.user._id" class="ms-2">
+                  &bull;
+                <a href="#"
+                  
+                  class="text-primary text-decoration-none ms-2"
+                  @click="editBlog(blog._id)"
+                ><i class="bi bi-pencil"></i> Edit Post</a></span>
+                <!-- <button class="btn btn-sm btn-secondary" @click="goToBlog(blog._id)">
+                  Read Post
+                </button> -->
+              </div>
+            </div>
+
+            <!-- Image column: small image -->
+            <div class="col-12 mt-4 mt-lg-0 col-lg-4 d-flex align-items-center justify-content-center">
+              <img
+                :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
+                class="img-fluid"
+                style="max-height: 120px; object-fit: cover;"
+                @click="goToBlog(blog._id)"
+              />
+            </div>
+
+            <div class="col-12">
+              <hr class="mt-4" />
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Sidebar: 20%, empty for now -->
+      <div class="col-md-3">
+        <div class="border p-3" style="min-height: 500px;">
+          <!-- Sidebar content will go here -->
+          <p class="text-muted">Sidebar reserved space</p>
+        </div>
       </div>
     </div>
   </div>
@@ -224,8 +180,9 @@ const cancelForm = () => {
   showForm.value = false
 }
 
-// Admin actions
-const editBlog = (id) => router.push(`/blogs/post/${id}`)
+// Actions
+const goToBlog = (id) => router.push(`/blogs/post/${id}`)
+const editBlog = (id) => router.push(`/blogs/edit/${id}`)
 
 const DeleteBlog = async (blogId) => {
   try {
@@ -243,8 +200,6 @@ const DeleteBlog = async (blogId) => {
     setTimeout(() => { message.value = '' }, 3000);
   }
 };
-
-const goToBlog = (id) => router.push(`/blogs/post/${id}`)
 
 // On mounted, fetch user details and blogs
 onMounted(async () => {

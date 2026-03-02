@@ -6,12 +6,11 @@
       Loading blog post...
     </div>
 
-    <!-- After Loading -->
     <div v-else>
 
-      <!-- ADMIN: EDIT MOVIE FORM -->
-      <div v-if="auth.isAdmin" class="card p-4 mt-3">
-        <h1 class="mb-3">Edit Blog</h1>
+      <!-- OWNER //-->
+      <div v-if="isOwner && isEditRoute" class="card p-4 mt-3">
+        <h1 class="mb-3">Edit Post</h1>
 
         <div
           v-if="message"
@@ -24,10 +23,54 @@
         </div>
 
         <form @submit.prevent="handleEditBlog">
-          <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
-          <textarea v-model="form.content" class="form-control mb-2" placeholder="Description" required></textarea>
-          <input v-model="form.featuredImage" type="url" class="form-control mb-2" placeholder="Featured Image URL" required />
 
+          <!-- Title -->
+          <input
+            v-model="form.title"
+            type="text"
+            class="form-control mb-3"
+            placeholder="Title"
+            required
+          />
+
+          <!-- Tiptap Toolbar -->
+          <div v-if="editor" class="mb-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+              @click="editor.chain().focus().toggleBold().run()">
+              Bold
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+              @click="editor.chain().focus().toggleItalic().run()">
+              Italic
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+              @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">
+              H2
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+              @click="editor.chain().focus().toggleBulletList().run()">
+              List
+            </button>
+          </div>
+
+          <!-- Tiptap Editor -->
+          <div v-if="editor" class="border rounded p-3 mb-3">
+            <EditorContent :editor="editor" />
+          </div>
+
+          <!-- Featured Image -->
+          <input
+            v-model="form.featuredImage"
+            type="url"
+            class="form-control mb-3"
+            placeholder="Featured Image URL"
+            required
+          />
+
+          <!-- Buttons -->
           <button class="btn btn-primary btn-sm me-2" :disabled="editing">
             <span v-if="editing">
               <span class="spinner-border spinner-border-sm me-1"></span>
@@ -37,94 +80,163 @@
               Save Changes
             </span>
           </button>
-          
-          <button class="btn btn-secondary btn-sm me-2"  @click="cancelOrder">Cancel</button>
+
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            @click="router.push(`/blogs/post/${route.params.id}`)"
+          >
+            Cancel
+          </button>
+
         </form>
       </div>
 
-      <!-- NON-ADMIN: SEE MOVIE DETAILS -->
-      <div v-else-if="blog" class="card shadow-sm p-4 mt-3 col-md-6 mx-auto">
+      <!-- VIEW MODE //-->
+      <div v-else-if="blog" class="card shadow-sm p-4 mt-3 col-md-8 mx-auto">
+
         <h1 class="card-title mb-2">{{ blog.title }}</h1>
-        <p class="fw-bold text-muted mb-0">By {{ blog.author?.username || 'Unknown' }} &bull; {{ formattedDate }}</p>
+
+        <p class="fw-bold text-muted mb-2">
+          By {{ blog.author?.username || 'Unknown' }}
+          &bull;
+          {{ formattedDate }}
+        </p>
+
+        <a
+          v-if="isOwner"
+          href="#"
+          @click.prevent="editBlog(blog._id)"
+          class="text-warning text-decoration-none"
+        >
+          Edit Post
+        </a>
+
         <hr>
-        <p class="card-img mb-4"><img v-if="blog.featuredImage" :src="blog.featuredImage" style="width: 100%;" class="img-fluid rounded" /></p>
+
+        <img
+          v-if="blog.featuredImage"
+          :src="blog.featuredImage"
+          class="img-fluid rounded mb-4"
+          style="width: 100%;"
+        />
+
         <div class="card-text mb-3" v-html="blog.content"></div>
 
-        <div v-if="auth.isAdmin">
-          <button class="btn btn-sm btn-danger" @click="DeleteBlog(blog._id)">
-            Delete
-          </button>
-        </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import api from '../services/api.js';
+import api from '../services/api.js'
 
+import { EditorContent, useEditor } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+
+// Router & Store
 const route = useRoute()
 const router = useRouter()
 const auth = useUserStore()
 
+// State
 const blog = ref(null)
 const loading = ref(true)
 const editing = ref(false)
-const errorMessage = ref("")
-
-const message = ref('')       // For success/error messages
+const message = ref('')
 const messageType = ref('')
 
-// Format blog post date
-const formattedDate = computed(() => {
-  if (!blog.value?.createdAt) return ''
-  const date = new Date(blog.value.createdAt)
-  return date.toLocaleDateString('en-GB', { 
-    day: '2-digit', 
-    month: 'short', 
-    year: 'numeric' 
-  })
-})
-
+// Form
 const form = reactive({
   title: '',
   content: '',
   featuredImage: ''
 })
 
-const moreBlogs = ref([])
+// Tiptap
+const editor = useEditor({
+  extensions: [StarterKit],
+  content: '',
+  onUpdate: ({ editor }) => {
+    form.content = editor.getHTML()
+  }
+})
 
-const blogId = route.params.id;
+// Computed
+const isEditRoute = computed(() =>
+  route.path.includes('/edit/')
+)
+
+const isOwner = computed(() =>
+  auth.user &&
+  blog.value &&
+  blog.value.author &&
+  blog.value.author._id === auth.user._id
+)
+
+const formattedDate = computed(() => {
+  if (!blog.value?.createdAt) return ''
+  const date = new Date(blog.value.createdAt)
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
+})
 
 // Load blog
-onMounted(async () => {
+const loadBlog = async (id) => {
+  loading.value = true
   try {
-    const res = await api.get(`/blogs/post/${blogId}`);
+    const res = await api.get(`/blogs/post/${id}`)
+    blog.value = res.data.blog
 
-    Object.assign(form, res.data.blog);
-    blog.value = res.data.blog;
+    Object.assign(form, res.data.blog)
+
+    if (editor.value) {
+      editor.value.commands.setContent(res.data.blog.content || '')
+    }
+
   } catch (err) {
-    console.error(err);
+    console.error(err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+}
 
-const goToBlogs = (id) => router.push(`/blogs`)
+onMounted(() => {
+  loadBlog(route.params.id)
+})
 
+watch(() => route.params.id, (newId) => {
+  if (newId) loadBlog(newId)
+})
+
+onBeforeUnmount(() => {
+  if (editor.value) {
+    editor.value.destroy()
+  }
+})
+
+// Navigation
+const editBlog = (id) => {
+  router.push(`/blogs/edit/${id}`)
+}
+
+// Save
 const handleEditBlog = async () => {
   try {
     editing.value = true
-    await api.patch(`/blogs/updateBlog/${blogId}`, form)
 
-    // Show confirmation message
+    await api.patch(`/blogs/edit/${route.params.id}`, form)
+
     message.value = "Blog updated successfully."
     messageType.value = "success"
 
-    // Wait 3 seconds then redirect
     setTimeout(() => {
       router.push("/blogs")
     }, 1500)
@@ -137,27 +249,4 @@ const handleEditBlog = async () => {
     editing.value = false
   }
 }
-
-const DeleteBlog = async (blogId) => {
-  try {
-    if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
-
-    await api.delete(`/blogs/delete/${blogId}`);
-
-    message.value = "Blog post deleted successfully.";
-    messageType.value = "success";
-
-    setTimeout(() => {
-      message.value = '';
-      router.push("/blogs"); // redirect to blog list
-    }, 3000);
-
-  } catch (err) {
-    console.error(err);
-    message.value = err.response?.data?.message || "Failed to delete blog post.";
-    messageType.value = "error";
-
-    setTimeout(() => { message.value = '' }, 3000);
-  }
-};
 </script>
