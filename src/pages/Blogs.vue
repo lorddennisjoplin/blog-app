@@ -83,7 +83,7 @@
 
       <!-- Sidebar: 20%, empty for now -->
       <div class="col-md-3">
-        <div class=" p-3" style="min-height: 500px;">
+        <div class="p-3">
           <!-- Sidebar content will go here -->
           <!-- <p class="text-muted">Sidebar reserved space</p> -->
         </div>
