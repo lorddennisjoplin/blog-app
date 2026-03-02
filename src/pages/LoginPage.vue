@@ -9,7 +9,7 @@
         </div>
 
         <form @submit.prevent="handleLogin">
-          <input v-model="loginForm.identifier" type="text" required class="form-control mb-3" placeholder="Username or Email Address" />
+          <input v-model="identifier" type="text" required class="form-control mb-3" placeholder="Username or Email Address" />
           <input v-model="password" type="password" required class="form-control mb-3" placeholder="Password" />
 
           <button
@@ -41,21 +41,24 @@ import { useRouter } from "vue-router"
 import { useUserStore } from "../stores/user"
 import api from "../services/api.js"
 
+// ----- Form state -----
 const loading = ref(false)
-const email = ref("")
+const identifier = ref("") // Can be email or username
 const password = ref("")
 const error = ref("")
 
+// ----- Router & store -----
 const router = useRouter()
 const auth = useUserStore()
 
+// ----- Login handler -----
 const handleLogin = async () => {
   error.value = ""
   loading.value = true
 
   try {
     const res = await api.post("/users/login", {
-      email: email.value,
+      identifier: identifier.value, // <-- use identifier here
       password: password.value
     })
 
@@ -63,9 +66,12 @@ const handleLogin = async () => {
     auth.setToken(res.data.access)
     localStorage.setItem("token", res.data.access)
 
-    // Optionally store user info
-    auth.setUser(res.data.user)
+    // Optionally store user info if returned
+    if (res.data.user) {
+      auth.setUser(res.data.user)
+    }
 
+    // Redirect after login
     router.push("/blogs")
   } catch (err) {
     error.value = err?.response?.data?.message || err.message || "Log in failed."
