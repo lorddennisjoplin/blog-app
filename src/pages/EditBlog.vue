@@ -92,12 +92,16 @@
 
           <hr>
 
-          <img
+          <div
             v-if="blog.featuredImage"
-            :src="blog.featuredImage"
-            class="img-fluid rounded mb-4"
-            style="width: 100%;"
-          />
+            style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; border-radius: 0.25rem; margin-bottom: 1.5rem;"
+          >
+            <img
+              :src="blog.featuredImage"
+              class="img-fluid featuredImage w-100 h-100"
+              style="object-fit: cover;"
+            />
+          </div>
 
           <div v-html="blog.content" class="mb-3"></div>
 
@@ -164,12 +168,17 @@
                 :class="index === latestPosts.length - 1 ? 'mb-0' : 'mb-3'"
               >
                 <RouterLink :to="`/posts/view/${post._id}`" class="text-decoration-none">
-                  <img
-                    v-if="post.featuredImage"
-                    :src="post.featuredImage"
-                    class="img-fluid mb-1 rounded"
-                    style="max-width: 100%; object-fit: cover;"
-                  />
+                  <div 
+                    v-if="post.featuredImage" 
+                    style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; border-radius: 0.25rem; cursor: pointer;"
+                  >
+                    <img
+                      :src="post.featuredImage"
+                      class="img-fluid w-100 h-100"
+                      style="object-fit: cover;"
+                    />
+                  </div>
+
                   <h4
                     class="mt-2 text-dark"
                     :class="index === latestPosts.length - 1 ? 'mb-0' : 'mb-4'"
