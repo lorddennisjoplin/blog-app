@@ -106,3 +106,44 @@ module.exports.getProfile = (req, res) => {
         })
         .catch(error => errorHandler(error, req, res));
 };
+
+module.exports.updateProfile = async (req, res) => {
+  try {
+    const { username, email } = req.body
+
+    if (!username || !email) {
+      return res.status(400).json({ message: "Username and email are required." })
+    }
+
+    // Check if username already exists (excluding current user)
+    const usernameExists = await User.findOne({
+      username,
+      _id: { $ne: req.user.id }
+    })
+
+    if (usernameExists) {
+      return res.status(400).json({ message: "Username already taken." })
+    }
+
+    // Check if email already exists (excluding current user)
+    const emailExists = await User.findOne({
+      email,
+      _id: { $ne: req.user.id }
+    })
+
+    if (emailExists) {
+      return res.status(400).json({ message: "Email already in use." })
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { username, email },
+      { new: true }
+    ).select("-password")
+
+    return res.status(200).json({ user: updatedUser })
+
+  } catch (error) {
+    return errorHandler(error, req, res)
+  }
+}
