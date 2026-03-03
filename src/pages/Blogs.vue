@@ -81,7 +81,7 @@
       <!-- Sidebar: 20%, empty for now -->
       <div class="col-md-3">
         <div class="px-3">
-          <h3 class="mb-3">Discussion</h3>
+          <h3 class="mb-3">Join the Discussion</h3>
 
           <div v-if="latestComments.length === 0" class="text-muted">
             No comments yet.
@@ -105,7 +105,9 @@
                 <small class="text-muted ms-2">{{ formatDate(comment.createdAt) }}</small>
               </p>
               <p class="mb-0">
-                Commented on 
+                Commented
+                "{{ stripAndTruncate(comment.content, 150) }}"
+                on
                 <RouterLink :to="`/posts/view/${comment.post._id}`" class="text-decoration-none">
                   {{ comment.post.title }}
                 </RouterLink>
