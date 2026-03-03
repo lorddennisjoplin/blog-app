@@ -119,8 +119,8 @@
 
             <!-- Comments Section -->
             <div class="my-5">
-              <hr class="mb-5">
-              <h2 class="mb-3" id="comments">Comments</h2>
+              <hr class="mb-5" id="comments">
+              <h2 class="mb-3">Comments</h2>
 
               <div v-if="auth.token" class="mb-4">
                 <form @submit.prevent="submitComment">
@@ -304,6 +304,16 @@ onMounted(() => loadBlog(route.params.id))
 watch(() => route.params.id, (newId) => { if (newId) loadBlog(newId) })
 onBeforeUnmount(() => { if (editor.value) editor.value.destroy() })
 
+onMounted(async () => {
+  // wait until the post and comments are rendered
+  if (route.hash === '#comments') {
+    // small delay to ensure comments section exists
+    await nextTick(); 
+    const el = document.querySelector('#comments');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
 // Navigation
 const editBlog = (id) => router.push(`/posts/edit/${id}`)
 const cancelEdit = () => router.push(`/posts/view/${route.params.id}`)
@@ -394,4 +404,26 @@ const fetchLatestPosts = async (excludeId) => {
     latestPosts.value = res.data.blogs || []
   } catch (err) { console.error(err) }
 }
+
+watch(
+  () => route.hash,
+  async (hash) => {
+    if (hash === '#comments') {
+      const waitForComments = () => new Promise((resolve) => {
+        const interval = setInterval(() => {
+          const el = document.querySelector('#comments');
+          if (el) {
+            clearInterval(interval);
+            resolve(el);
+          }
+        }, 50);
+        setTimeout(() => clearInterval(interval), 2000); // fallback
+      });
+
+      const el = await waitForComments();
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  },
+  { immediate: true }
+);
 </script>

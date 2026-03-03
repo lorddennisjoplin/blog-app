@@ -207,16 +207,28 @@ const stripAndTruncate = (html, maxLength) => {
 
 // Scroll to comments
 const scrollToComments = async (id) => {
-  const currentPath = router.currentRoute.value.path
-  if (currentPath !== `/posts/view/${id}`) {
-    router.push({ path: `/posts/view/${id}`, hash: '#comments' })
-  } else {
-    await nextTick()
-    const el = document.querySelector('#comments')
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
-  }
-}
+  const currentPath = router.currentRoute.value.path;
 
+  if (currentPath !== `/posts/view/${id}`) {
+    // Navigate to the post with hash
+    router.push({ path: `/posts/view/${id}`, hash: '#comments' });
+  } else {
+    // Already on the page, wait until comments exist
+    const waitForComments = () => new Promise((resolve) => {
+      const interval = setInterval(() => {
+        const el = document.querySelector('#comments');
+        if (el) {
+          clearInterval(interval);
+          resolve(el);
+        }
+      }, 50);
+      setTimeout(() => clearInterval(interval), 2000); // fallback
+    });
+
+    const el = await waitForComments();
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
+};
 // Pagination
 const totalPages = computed(() => Math.ceil(blogs.value.length / itemsPerPage))
 const paginatedBlogs = computed(() => {
