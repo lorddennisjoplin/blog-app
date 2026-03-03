@@ -9,9 +9,9 @@
 
         <div v-else>
           <div v-if="blogs.length === 0">
-            <template v-if="isUserPage">
+            <template v-if="isUserPage && auth.user?.username === route.params.username">
               <div class="alert alert-warning py-2">
-                No posts found for this user.
+                You haven't made any posts.
               </div>
             </template>
             <template v-else>
