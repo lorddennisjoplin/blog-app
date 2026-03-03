@@ -12,6 +12,7 @@ router.patch("/edit/:blogId", verify, blogController.updateBlogPost);
 router.delete("/delete/:blogId", verify, blogController.deleteBlogPost);
 router.post("/addComment/:blogId", verify, blogController.addBlogComment);
 router.get("/getComments/:blogId", verify, blogController.getBlogComments);
+router.get("/latestComments", verify, blogController.getLatestComments);
 router.delete("/deleteComment/:commentId", verify, verifyAdmin, blogController.deleteBlogComment);
 
 module.exports = router;

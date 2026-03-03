@@ -80,9 +80,38 @@
 
       <!-- Sidebar: 20%, empty for now -->
       <div class="col-md-3">
-        <div class="p-3">
-          <!-- Sidebar content will go here -->
-          <!-- <p class="text-muted">Sidebar reserved space</p> -->
+        <div class="px-3">
+          <h3 class="mb-3">Discussion</h3>
+
+          <div v-if="latestComments.length === 0" class="text-muted">
+            No comments yet.
+          </div>
+
+          <div v-else>
+            <div 
+              v-for="comment in latestComments" 
+              :key="comment._id" 
+              class="mb-3 border-bottom pb-2"
+            >
+              <p class="mb-1">
+                <RouterLink 
+                  v-if="comment.user?.username" 
+                  :to="`/posts/user/${comment.user.username}`" 
+                  class="text-decoration-none fw-bold"
+                >
+                  {{ comment.user.username }}
+                </RouterLink>
+                <span v-else><strong>Unknown</strong></span>
+                <small class="text-muted ms-2">{{ formatDate(comment.createdAt) }}</small>
+              </p>
+              <p class="mb-0">
+                Commented on 
+                <RouterLink :to="`/posts/view/${comment.post._id}`" class="text-decoration-none">
+                  {{ comment.post.title }}
+                </RouterLink>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -284,4 +313,24 @@ onMounted(async () => {
 watch(() => route.params.username, (username) => {
   document.title = username ? `${username}'s Posts | Blog App` : "All Posts | Blog App";
 }, { immediate: true });
+
+// Latest comments
+const latestComments = ref([])
+
+// Fetch latest 5 comments for sidebar
+const fetchLatestComments = async () => {
+  try {
+    const res = await api.get('/posts/latestComments?limit=5') // your API endpoint
+    // API should return array of comments with: _id, createdAt, content, user {_id, username}, post {_id, title}
+    latestComments.value = res.data.comments || []
+  } catch (err) {
+    console.error("Failed to fetch latest comments:", err)
+    latestComments.value = []
+  }
+}
+
+// Fetch on mounted
+onMounted(() => {
+  fetchLatestComments()
+})
 </script>

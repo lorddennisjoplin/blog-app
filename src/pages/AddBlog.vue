@@ -5,7 +5,7 @@
     <div v-if="auth.user" class="card p-3 my-3 text-start">
       <!-- Success / Error Alert -->
       <div
-        v-if="message && blogs.value?.length === 0"
+        v-if="message"
         :class="[
           'alert py-2',
           messageType === 'success' ? 'alert-success' : 'alert-danger'
@@ -185,7 +185,7 @@ const handleAddBlog = async () => {
     })
     const newBlog = res.data
 
-    message.value = 'Blog added successfully. Redirecting...'
+    message.value = 'Post added successfully. Redirecting...'
     messageType.value = 'success'
 
     setTimeout(() => {

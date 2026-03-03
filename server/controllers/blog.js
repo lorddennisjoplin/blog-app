@@ -314,3 +314,40 @@ module.exports.deleteBlogComment = async (req, res) => {
     return errorHandler(error, req, res);
   }
 };
+
+// Fetch latest comments across all blogs
+module.exports.getLatestComments = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 5;
+
+    // Aggregate all comments from blogs
+    const blogs = await Blog.find({}, { title: 1, comments: 1 })
+      .populate('comments.userId', 'username');
+
+    // Flatten all comments with blog info
+    let allComments = [];
+    blogs.forEach(blog => {
+      blog.comments.forEach(comment => {
+        allComments.push({
+          _id: comment._id,
+          content: comment.comment,
+          createdAt: comment.createdAt,
+          user: comment.userId, // { _id, username }
+          post: { _id: blog._id, title: blog.title }
+        });
+      });
+    });
+
+    // Sort descending by createdAt
+    allComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Take top `limit`
+    allComments = allComments.slice(0, limit);
+
+    return res.status(200).json({ comments: allComments });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: err.message });
+  }
+};
