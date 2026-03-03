@@ -6,7 +6,7 @@
 
     <div v-else>
 
-      <div v-if="message" :class="['alert', messageType === 'error' ? 'alert-danger' : 'alert-success']">
+      <div v-if="message" :class="['mb-3 py-2 alert', messageType === 'error' ? 'alert-danger' : 'alert-success']">
         {{ message }}
       </div>
 
@@ -125,8 +125,8 @@ const updateProfile = async () => {
 
     // Password validation
     if (updatePassword.value) {
-      if (!form.password || form.password.length < 6) {
-        message.value = "Password must be at least 6 characters."
+      if (!form.password || form.password.length < 8) {
+        message.value = "Password must be at least 8 characters."
         messageType.value = "error"
         updating.value = false
         return

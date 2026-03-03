@@ -8,44 +8,40 @@ module.exports.registerUser = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Check if username already exists
-        const existingUsername = await User.findOne({ username });
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: "All fields are required." });
+        }
+
+        // Normalize inputs
+        const usernameNormalized = username.trim().toLowerCase();
+        const emailNormalized = email.trim().toLowerCase();
+
+        // Check if username already exists (case-insensitive)
+        const existingUsername = await User.findOne({ username: { $regex: `^${usernameNormalized}$`, $options: 'i' } });
         if (existingUsername) {
-            return res.status(409).json({
-                success: false,
-                message: "Username already taken."
-            });
+            return res.status(409).json({ success: false, message: "Username already taken." });
         }
 
-        // Check if email already exists
-        const existingEmail = await User.findOne({ email });
+        // Check if email already exists (case-insensitive)
+        const existingEmail = await User.findOne({ email: { $regex: `^${emailNormalized}$`, $options: 'i' } });
         if (existingEmail) {
-            return res.status(409).json({
-                success: false,
-                message: "Email already exists."
-            });
+            return res.status(409).json({ success: false, message: "Email already exists." });
         }
 
-        // Validate email
-        if (!email.includes("@")) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid email format."
-            });
+        // Validate email format
+        if (!emailNormalized.includes("@")) {
+            return res.status(400).json({ success: false, message: "Invalid email format." });
         }
 
         // Validate password length
         if (password.length < 8) {
-            return res.status(400).json({
-                success: false,
-                message: "Password must be at least 8 characters."
-            });
+            return res.status(400).json({ success: false, message: "Password must be at least 8 characters." });
         }
 
         // Create new user
         const newUser = new User({
-            username,
-            email,
+            username: usernameNormalized,
+            email: emailNormalized,
             password: bcrypt.hashSync(password, 10)
         });
 
@@ -63,39 +59,48 @@ module.exports.registerUser = async (req, res) => {
 };
 
 module.exports.loginUser = (req, res) => {
-    const { identifier, password } = req.body; // identifier = email OR username
+  const { identifier, password } = req.body
 
-    if (!identifier || !password) {
-        return res.status(400).send({ success: false, message: "Enter your username/email and password." });
-    }
+  if (!identifier || !password) {
+    return res.status(400).send({
+      success: false,
+      message: "Enter your username/email and password."
+    })
+  }
 
-    // Determine if identifier is an email
-    const isEmail = identifier.includes("@");
+  const normalizedIdentifier = identifier.toLowerCase()
+  const isEmail = normalizedIdentifier.includes("@")
 
-    const query = isEmail 
-        ? { email: identifier } 
-        : { username: identifier };
+  const query = isEmail
+    ? { email: normalizedIdentifier }
+    : { username: normalizedIdentifier }
 
-    User.findOne(query)
-        .then(user => {
-            if (!user) {
-                return res.status(404).send({ success: false, message: "User not found." });
-            }
-
-            const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-            if (!isPasswordCorrect) {
-                return res.status(401).send({ success: false, message: "Incorrect password." });
-            }
-
-            // Successful login
-            return res.status(200).send({ 
-                success: true, 
-                access: auth.createAccessToken(user),
-                message: "Log in successful." 
-            });
+  User.findOne(query)
+    .then(user => {
+      if (!user) {
+        return res.status(404).send({
+          success: false,
+          message: "User not found."
         })
-        .catch(error => errorHandler(error, req, res));
-};
+      }
+
+      const isPasswordCorrect = bcrypt.compareSync(password, user.password)
+
+      if (!isPasswordCorrect) {
+        return res.status(401).send({
+          success: false,
+          message: "Incorrect password."
+        })
+      }
+
+      return res.status(200).send({
+        success: true,
+        access: auth.createAccessToken(user),
+        message: "Log in successful."
+      })
+    })
+    .catch(error => errorHandler(error, req, res))
+}
 
 module.exports.getProfile = (req, res) => {
     return User.findById(req.user.id)
@@ -111,13 +116,16 @@ module.exports.updateProfile = async (req, res) => {
   try {
     const { username, email, password } = req.body
 
+    const usernameNormalized = username.trim().toLowerCase()
+    const emailNormalized = email.trim().toLowerCase()
+
     if (!username || !email) {
       return res.status(400).json({ message: "Username and email are required." })
     }
 
     // Username uniqueness check
     const usernameExists = await User.findOne({
-      username,
+      username: { $regex: `^${usernameNormalized}$`, $options: 'i' },
       _id: { $ne: req.user.id }
     })
 
@@ -127,7 +135,7 @@ module.exports.updateProfile = async (req, res) => {
 
     // Email uniqueness check
     const emailExists = await User.findOne({
-      email,
+      email: { $regex: `^${emailNormalized}$`, $options: 'i' },
       _id: { $ne: req.user.id }
     })
 
@@ -142,7 +150,10 @@ module.exports.updateProfile = async (req, res) => {
       })
     }
 
-    const updateData = { username, email }
+    const updateData = {
+      username: usernameNormalized,
+      email: emailNormalized
+    }
 
     // Only validate password IF it exists
     if (password) {
