@@ -265,12 +265,18 @@ module.exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
-      const existingEmail = await User.findOne({ email, _id: { $ne: user._id } })
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email address already exists." })
-      }
-
+      // Assign new email first
       user.email = email
+
+      // Save and catch duplicate errors from MongoDB
+      try {
+        await user.save()
+      } catch (error) {
+        if (error.code === 11000 && error.keyPattern.email) {
+          return res.status(400).json({ message: "Email address already exists." })
+        }
+        throw error
+      }
     }
 
     // Update password if provided
@@ -285,17 +291,6 @@ module.exports.updateUser = async (req, res) => {
     // Update admin status if boolean
     if (typeof isAdmin === "boolean") {
       user.isAdmin = isAdmin
-    }
-
-    // Save changes with duplicate handling
-    try {
-      await user.save()
-    } catch (error) {
-      if (error.code === 11000) {
-        const field = Object.keys(error.keyPattern)[0] // 'email' or 'username'
-        return res.status(400).json({ message: `${field} already exists.` })
-      }
-      throw error
     }
 
     return res.status(200).json({
