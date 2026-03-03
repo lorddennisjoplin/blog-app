@@ -1,13 +1,17 @@
 <template>
   <div class="container my-5 text-start">
-    <h1 class="mb-4">All Users</h1>
+    <h1 class="mb-4">
+      {{ isEditing ? "Edit User" : "All Users" }}
+    </h1>
 
-    <div v-if="auth.isAdmin" class="mb-3">
+    <!-- ADMIN ACTION BUTTON -->
+    <div v-if="auth.isAdmin && !isEditing" class="mb-3">
       <button class="btn btn-primary me-2" @click="showForm = !showForm">
         Add User
       </button>
     </div>
 
+    <!-- ALERT MESSAGE -->
     <div
       v-if="message"
       :class="[
@@ -18,8 +22,62 @@
       {{ message }}
     </div>
 
+    <!-- ===================== -->
+    <!-- EDIT USER FORM -->
+    <!-- ===================== -->
+    <div v-if="isEditing" class="card p-3 my-3">
+      <h2 class="mb-3">Edit User</h2>
+
+      <form @submit.prevent="handleEditUser">
+        <input
+          v-model="editForm.username"
+          type="text"
+          class="form-control mb-2"
+          placeholder="Username"
+          required
+        />
+
+        <input
+          v-model="editForm.email"
+          type="text"
+          class="form-control mb-2"
+          placeholder="Email Address"
+          required
+        />
+
+        <div class="form-check mb-3" v-if="auth.isAdmin">
+          <input
+            v-model="editForm.isAdmin"
+            type="checkbox"
+            class="form-check-input"
+            id="editIsAdminCheckbox"
+          />
+          <label class="form-check-label" for="editIsAdminCheckbox">
+            Admin
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-sm btn-primary me-2">
+          Update
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary"
+          @click="cancelEdit"
+        >
+          Cancel
+        </button>
+      </form>
+    </div>
+
+    <!-- ===================== -->
     <!-- ADD USER FORM -->
-    <div v-if="showForm && auth.isAdmin" class="card p-3 my-3 text-start">
+    <!-- ===================== -->
+    <div
+      v-if="showForm && auth.isAdmin && !isEditing"
+      class="card p-3 my-3"
+    >
       <h2 class="mb-3">Add User</h2>
 
       <form @submit.prevent="handleAddUser">
@@ -49,8 +107,10 @@
       </form>
     </div>
 
+    <!-- ===================== -->
     <!-- USERS TABLE -->
-    <div class="mt-4">
+    <!-- ===================== -->
+    <div v-if="!isEditing" class="mt-4">
       <div v-if="loading" class="alert alert-info py-2">Loading users...</div>
 
       <div v-else-if="paginatedUsers.length && auth.isAdmin">
@@ -66,12 +126,8 @@
             </thead>
             <tbody>
               <tr v-for="user in paginatedUsers" :key="user._id">
-                <td class="text-center">
-                    {{ user.username }}
-                </td>
-
+                <td class="text-center">{{ user.username }}</td>
                 <td class="text-center">{{ user.email }}</td>
-
                 <td class="text-center">
                   <router-link
                     :to="`/posts/user/${user.username}`"
@@ -82,48 +138,26 @@
                 </td>
 
                 <td class="text-center">
-				  <button
-				    class="btn btn-sm me-2"
-				    :class="user.isAdmin ? 'btn-warning' : 'btn-success'"
-				    @click="toggleAdmin(user)"
-				  >
-				    {{ user.isAdmin ? 'Remove Admin' : 'Make Admin' }}
-				  </button>
+                  <button
+                    v-if="auth.user._id !== user._id"
+                    class="btn btn-sm btn-primary me-2"
+                    @click="editUser(user._id)"
+                  >
+                    Edit
+                  </button>
 
-				  <button class="btn btn-sm btn-primary me-2" @click="editUser(user.username)">
-				    Edit
-				  </button>
-
-				  <button class="btn btn-sm btn-danger" @click="DeleteUser(user._id)">
-				    Delete
-				  </button>
-				</td>
+                  <button
+                    v-if="auth.user._id !== user._id"
+                    class="btn btn-sm btn-danger"
+                    @click="DeleteUser(user._id)"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <!-- PAGINATION -->
-        <nav v-if="totalPages > 1" class="mt-3">
-          <ul class="pagination justify-content-center">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <button class="page-link" @click="currentPage--">Previous</button>
-            </li>
-
-            <li
-              v-for="page in totalPages"
-              :key="page"
-              class="page-item"
-              :class="{ active: page === currentPage }"
-            >
-              <button class="page-link" @click="currentPage = page">{{ page }}</button>
-            </li>
-
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <button class="page-link" @click="currentPage++">Next</button>
-            </li>
-          </ul>
-        </nav>
       </div>
 
       <div v-else class="alert alert-warning">No users found.</div>
@@ -132,24 +166,33 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../services/api.js'
 
 const auth = useUserStore()
 const router = useRouter()
+const route = useRoute()
 
 const showForm = ref(false)
 const message = ref('')
 const messageType = ref('success')
 const adding = ref(false)
+const isEditing = ref(false)
 
 const form = reactive({
   username: '',
   email: '',
   password: '',
   confirmPassword: '',
+  isAdmin: false
+})
+
+const editForm = reactive({
+  _id: '',
+  username: '',
+  email: '',
   isAdmin: false
 })
 
@@ -167,46 +210,74 @@ const paginatedUsers = computed(() => {
   return users.value.slice(start, start + itemsPerPage)
 })
 
-// Fetch number of posts for the user
+/* =========================
+   FETCH USERS
+========================= */
 const fetchUsers = async () => {
   loading.value = true
   try {
     const res = await api.get('/users/all')
-    const fetchedUsers = res.data.users || []
-
-    // Fetch post count for each user
-    const usersWithPostCount = await Promise.all(
-      fetchedUsers.map(async (user) => {
-        try {
-          const postRes = await api.get(`/posts/user/${user.username}`)
-          return {
-            ...user,
-            postCount: postRes.data.blogs?.length || 0
-          }
-        } catch (err) {
-          return {
-            ...user,
-            postCount: 0
-          }
-        }
-      })
-    )
-
-    users.value = usersWithPostCount
-
+    users.value = res.data.users || []
   } catch (err) {
-    message.value = err.response?.data?.message || 'Failed to fetch users.'
+    message.value = 'Failed to fetch users.'
     messageType.value = 'error'
   } finally {
     loading.value = false
   }
 }
 
+/* =========================
+   LOAD USER FOR EDIT
+========================= */
+const loadUserForEdit = async (id) => {
+  try {
+    const res = await api.get(`/users/profile/${id}`)
+    const user = res.data.user
+
+    editForm._id = user._id
+    editForm.username = user.username
+    editForm.email = user.email
+    editForm.isAdmin = user.isAdmin
+
+    isEditing.value = true
+    showForm.value = false
+  } catch (err) {
+    message.value = 'Failed to load user.'
+    messageType.value = 'error'
+  }
+}
+
+/* =========================
+   UPDATE USER
+========================= */
+const handleEditUser = async () => {
+  try {
+    const res = await api.put(`/users/edit/${editForm._id}`, editForm)
+
+    message.value = 'User updated successfully.'
+    messageType.value = 'success'
+
+    await fetchUsers()
+    cancelEdit()
+  } catch (err) {
+    message.value = err.response?.data?.message || 'Update failed.'
+    messageType.value = 'error'
+  }
+}
+
+const cancelEdit = () => {
+  isEditing.value = false
+  router.push('/users')
+}
+
+/* =========================
+   ADD USER
+========================= */
 const handleAddUser = async () => {
   try {
     adding.value = true
-    const res = await api.post('/users/register', form)
-    users.value.unshift(res.data)
+    await api.post('/users/register', form)
+    await fetchUsers()
     cancelForm()
     message.value = 'User added successfully.'
     messageType.value = 'success'
@@ -229,47 +300,27 @@ const cancelForm = () => {
   showForm.value = false
 }
 
-const toggleAdmin = async (user) => {
-  try {
-    const res = await api.patch(`/users/edit/${user._id}`)
-
-    // Update UI instantly
-    user.isAdmin = res.data.isAdmin
-
-    message.value = res.data.message || 'User role updated.'
-    messageType.value = 'success'
-
-    setTimeout(() => {
-      message.value = ''
-    }, 2000)
-
-  } catch (err) {
-    message.value = err.response?.data?.message || 'Failed to update role.'
-    messageType.value = 'error'
-
-    setTimeout(() => {
-      message.value = ''
-    }, 2000)
-  }
-}
-
-const editUser = (username) => {
-  router.push(`/user/${username}`)
+const editUser = (id) => {
+  router.push(`/users/edit/${id}`)
 }
 
 const DeleteUser = async (userId) => {
-  if (!confirm('Are you sure you want to delete this user?')) return
-
-  try {
-    await api.delete(`/users/deleteUser/${userId}`)
-    users.value = users.value.filter(u => u._id !== userId)
-    message.value = 'User deleted successfully.'
-    messageType.value = 'success'
-  } catch (err) {
-    message.value = err.response?.data?.message || 'Failed to delete user.'
-    messageType.value = 'error'
-  }
+  if (!confirm('Are you sure?')) return
+  await api.delete(`/users/deleteUser/${userId}`)
+  await fetchUsers()
 }
+
+/* =========================
+   WATCH ROUTE
+========================= */
+watch(
+  () => route.params.userId,
+  (id) => {
+    if (id) loadUserForEdit(id)
+    else isEditing.value = false
+  },
+  { immediate: true }
+)
 
 onMounted(fetchUsers)
 </script>

@@ -15,6 +15,7 @@ const routes = [
   { path: "/register", component: Register, meta: { title: "Register | Blog App" } },
   { path: "/profile", component: Profile, meta: { title: "My Profile | Blog App" } },
   { path: "/users", component: Users, meta: { title: "All Users | Blog App" } },
+  { path: "/users/edit/:userId", component: Users, meta: { title: "Edit User | Blog App" } },
   { path: "/posts", component: Blogs, meta: { title: "All Posts | Blog App" } },
   { path: "/posts/add", component: AddBlog, meta: { title: "Add Post | Blog App" } },
   { path: "/posts/user/:username?", component: Blogs, meta: { title: "User's Posts | Blog App" } },
