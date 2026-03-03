@@ -45,6 +45,12 @@
             </li>
 
             <li class="nav-item">
+              <RouterLink class="nav-link" to="/profile">
+                <i class="bi bi-person"></i> My Profile
+              </RouterLink>
+            </li>
+
+            <li class="nav-item">
               <a class="nav-link text-danger" href="#" @click.prevent="logout">
                 <i class="bi bi-x-octagon"></i> Log out
               </a>

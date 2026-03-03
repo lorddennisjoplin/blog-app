@@ -109,13 +109,12 @@ module.exports.getProfile = (req, res) => {
 
 module.exports.updateProfile = async (req, res) => {
   try {
-    const { username, email } = req.body
+    const { username, email, password } = req.body
 
     if (!username || !email) {
       return res.status(400).json({ message: "Username and email are required." })
     }
 
-    // Check if username already exists (excluding current user)
     const usernameExists = await User.findOne({
       username,
       _id: { $ne: req.user.id }
@@ -125,7 +124,6 @@ module.exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Username already taken." })
     }
 
-    // Check if email already exists (excluding current user)
     const emailExists = await User.findOne({
       email,
       _id: { $ne: req.user.id }
@@ -135,15 +133,23 @@ module.exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Email already in use." })
     }
 
+    const updateData = { username, email }
+
+    // Only update password if provided
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10)
+      updateData.password = hashedPassword
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { username, email },
+      updateData,
       { new: true }
     ).select("-password")
 
-    return res.status(200).json({ user: updatedUser })
+    res.status(200).json({ user: updatedUser })
 
   } catch (error) {
-    return errorHandler(error, req, res)
+    errorHandler(error, req, res)
   }
 }

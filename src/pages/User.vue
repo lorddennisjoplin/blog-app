@@ -32,6 +32,42 @@
           />
         </div>
 
+        <!-- Update Password Toggle -->
+		<div class="form-check mb-3">
+		  <input
+		    class="form-check-input"
+		    type="checkbox"
+		    id="updatePassword"
+		    v-model="updatePassword"
+		  />
+		  <label class="form-check-label" for="updatePassword">
+		    Update Password?
+		  </label>
+		</div>
+
+		<!-- Password Fields -->
+		<div v-if="updatePassword">
+		  <div class="mb-3">
+		    <label class="form-label">New Password</label>
+		    <input
+		      v-model="form.password"
+		      type="password"
+		      class="form-control"
+		      minlength="6"
+		    />
+		  </div>
+
+		  <div class="mb-3">
+		    <label class="form-label">Confirm Password</label>
+		    <input
+		      v-model="form.confirmPassword"
+		      type="password"
+		      class="form-control"
+		      minlength="6"
+		    />
+		  </div>
+		</div>
+
         <button class="btn btn-primary" :disabled="updating">
           <span v-if="updating">
             <span class="spinner-border spinner-border-sm me-1"></span>
@@ -56,10 +92,13 @@ const loading = ref(true)
 const updating = ref(false)
 const message = ref('')
 const messageType = ref('success')
+const updatePassword = ref(false)
 
 const form = reactive({
   username: '',
-  email: ''
+  email: '',
+  password: '',
+  confirmPassword: ''
 })
 
 const fetchProfile = async () => {
@@ -84,21 +123,48 @@ const updateProfile = async () => {
     updating.value = true
     message.value = ''
 
+    // Password validation
+    if (updatePassword.value) {
+      if (!form.password || form.password.length < 6) {
+        message.value = "Password must be at least 6 characters."
+        messageType.value = "error"
+        updating.value = false
+        return
+      }
+
+      if (form.password !== form.confirmPassword) {
+        message.value = "Passwords do not match."
+        messageType.value = "error"
+        updating.value = false
+        return
+      }
+    }
+
+    const payload = {
+      username: form.username,
+      email: form.email
+    }
+
+    // Only include password if checkbox checked
+    if (updatePassword.value) {
+      payload.password = form.password
+    }
+
     const res = await api.patch(
       '/users/profile',
-      {
-        username: form.username,
-        email: form.email
-      },
-      {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      }
+      payload,
+      { headers: { Authorization: `Bearer ${auth.token}` } }
     )
 
-    auth.setUser(res.data.user) // update store
+    auth.setUser(res.data.user)
 
     message.value = "Profile updated successfully."
     messageType.value = "success"
+
+    // Reset password fields
+    updatePassword.value = false
+    form.password = ''
+    form.confirmPassword = ''
 
     setTimeout(() => {
       message.value = ''
