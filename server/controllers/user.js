@@ -108,6 +108,20 @@ module.exports.loginUser = async (req, res) => {
   }
 };
 
+module.exports.allUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found." });
+    }
+
+    return res.status(200).json({ users });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
+};
+
 module.exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");

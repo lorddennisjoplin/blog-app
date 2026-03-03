@@ -47,6 +47,12 @@
               </RouterLink>
             </li>
 
+            <li v-if="auth.isAdmin" class="nav-item">
+              <RouterLink class="nav-link" :to="'/users'">
+                <i class="bi bi-people"></i> All Users
+              </RouterLink>
+            </li>
+
             <li class="nav-item">
               <a class="nav-link text-danger" href="#" @click.prevent="logout">
                 <i class="bi bi-x-octagon"></i> Log out

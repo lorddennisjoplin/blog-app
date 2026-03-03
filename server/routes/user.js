@@ -9,5 +9,6 @@ router.post("/register", userController.registerUser);
 router.post("/login", userController.loginUser);
 router.get("/details", verify, userController.getProfile);
 router.patch("/profile", verify, userController.updateProfile)
+router.get("/all", verify, verifyAdmin, userController.allUsers)
 
 module.exports = router;
