@@ -146,6 +146,17 @@
                     Edit
                   </button>
 
+                  <router-link v-if="auth.user._id === user._id"
+                    :to="'/profile'"
+                    class="fw-bold text-decoration-none"
+                  >
+	                  <button
+	                    class="btn btn-sm btn-primary me-2"
+	                  >
+	                    Edit Profile
+	                  </button>
+	              </router-link>
+
                   <button
                     v-if="auth.user._id !== user._id"
                     class="btn btn-sm btn-danger"

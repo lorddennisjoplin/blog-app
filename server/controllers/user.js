@@ -4,6 +4,8 @@ const auth = require('../auth.js');
 
 const { errorHandler } = require('../auth');
 
+const mongoose = require('mongoose')
+
 module.exports.registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -244,25 +246,34 @@ module.exports.updateUser = async (req, res) => {
     const { userId } = req.params
     const { username, email, password, isAdmin } = req.body
 
-    const user = await User.findById(userId)
+    // Convert userId to ObjectId for safe comparison
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID." })
+    }
+    const objectUserId = mongoose.Types.ObjectId(userId)
+
+    // Fetch user to update
+    const user = await User.findById(objectUserId)
     if (!user) {
       return res.status(404).json({ message: "User not found." })
     }
 
+    // Update username if provided and different
     if (username && username !== user.username) {
-      const existingUsername = await User.findOne({ username, _id: { $ne: userId } })
+      const existingUsername = await User.findOne({ username, _id: { $ne: objectUserId } })
       if (existingUsername) {
         return res.status(400).json({ message: "Username already taken." })
       }
       user.username = username
     }
 
+    // Update email if provided and different
     if (email && email !== user.email) {
       if (!email.includes("@")) {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
-      const existingEmail = await User.findOne({ email, _id: { $ne: userId } })
+      const existingEmail = await User.findOne({ email, _id: { $ne: objectUserId } })
       if (existingEmail) {
         return res.status(400).json({ message: "Email address already exists." })
       }
@@ -270,21 +281,21 @@ module.exports.updateUser = async (req, res) => {
       user.email = email
     }
 
+    // Update password if provided
     if (password) {
       if (password.length < 8) {
-        return res.status(400).json({
-          message: "Password must be at least 8 characters."
-        })
+        return res.status(400).json({ message: "Password must be at least 8 characters." })
       }
-
       const salt = await bcrypt.genSalt(10)
       user.password = await bcrypt.hash(password, salt)
     }
 
+    // Update admin status if boolean
     if (typeof isAdmin === "boolean") {
       user.isAdmin = isAdmin
     }
 
+    // Save changes
     await user.save()
 
     return res.status(200).json({
