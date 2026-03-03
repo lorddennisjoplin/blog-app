@@ -18,9 +18,22 @@
           </div>
 
           <div v-else>
-            <div v-for="blog in paginatedBlogs" :key="blog._id" class="row mb-3 align-items-center">
+            <div v-for="blog in paginatedBlogs" :key="blog._id" class="row align-items-center">
+              <!-- Image column -->
+              <div 
+                class="col-12 col-lg-4 d-flex align-items-center justify-content-center order-1 order-lg-2 mb-3 mb-lg-0"
+              >
+                <div style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; cursor: pointer;" @click="goToBlog(blog._id)">
+                  <img
+                    :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
+                    class="img-fluid w-100 h-100 rounded"
+                    style="object-fit: cover;"
+                  />
+                </div>
+              </div>
+
               <!-- Text column -->
-              <div class="col-12 col-lg-8 d-flex flex-column justify-content-between">
+              <div class="col-12 col-lg-8 d-flex flex-column justify-content-between order-2 order-lg-1">
                 <h2>
                   <a href="#" @click="goToBlog(blog._id)" class="text-decoration-none text-dark">
                     {{ blog.title }}
@@ -47,34 +60,17 @@
 
                   <span v-if="auth.user && blog.author && blog.author._id === auth.user._id" class="ms-2">
                     &bull;
-                    <a href="#"
-                      class="text-primary text-decoration-none ms-2"
-                      @click="editBlog(blog._id)"
-                    >
+                    <a href="#" class="text-primary text-decoration-none ms-2" @click="editBlog(blog._id)">
                       <i class="bi bi-pencil"></i> Edit Post
                     </a>
                   </span>
 
                   <span v-if="auth.isAdmin || (auth.user && blog.author && blog.author._id === auth.user._id)" class="ms-2">
                     &bull;
-                    <a href="#"
-                      class="text-danger text-decoration-none ms-2"
-                      @click="DeleteBlog(blog._id)"
-                    >
+                    <a href="#" class="text-danger text-decoration-none ms-2" @click="DeleteBlog(blog._id)">
                       <i class="bi bi-trash"></i> Delete Post
                     </a>
                   </span>
-                </div>
-              </div>
-
-              <!-- Image column -->
-              <div class="col-12 mt-4 mt-lg-0 col-lg-4 d-flex align-items-center justify-content-center">
-                <div style="width: 100%; aspect-ratio: 7 / 5; overflow: hidden; cursor: pointer;" @click="goToBlog(blog._id)">
-                  <img
-                    :src="blog.featuredImage || 'https://placehold.co/400x400?text=No+Image'"
-                    class="img-fluid w-100 h-100 rounded"
-                    style="object-fit: cover;"
-                  />
                 </div>
               </div>
 
