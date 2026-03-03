@@ -56,14 +56,14 @@
         <input
           v-model="form.featuredImage"
           type="url"
-          class="form-control mb-2"
+          class="form-control mb-3"
           placeholder="Featured Image URL"
           required
         />
 
         <button
           type="submit"
-          class="btn btn-sm btn-primary me-2"
+          class="btn btn-primary me-2"
           :disabled="adding"
         >
           <span v-if="adding">
@@ -77,7 +77,7 @@
 
         <button
           type="button"
-          class="btn btn-sm btn-secondary me-2"
+          class="btn btn-secondary me-2"
           @click="cancelForm"
           :disabled="adding"
         >
