@@ -244,42 +244,42 @@ module.exports.updateUser = async (req, res) => {
     const { userId } = req.params
     const { username, email, password, isAdmin } = req.body
 
-    // Fetch user to update
+    // 1️⃣ Fetch user to update
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found." })
     }
 
-    // Update username if provided and different
+    // 2️⃣ Check for username duplicates
     if (username && username !== user.username) {
-      const existingUsername = await User.findOne({ username, _id: { $ne: user._id } })
+      const existingUsername = await User.findOne({
+        username,
+        _id: { $ne: user._id } // exclude current user
+      })
       if (existingUsername) {
         return res.status(400).json({ message: "Username already taken." })
       }
       user.username = username
     }
 
-    // Update email if provided and different
+    // 3️⃣ Check for email duplicates
     if (email && email !== user.email) {
       if (!email.includes("@")) {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
-      // Assign new email first
-      user.email = email
-
-      // Save and catch duplicate errors from MongoDB
-      try {
-        await user.save()
-      } catch (error) {
-        if (error.code === 11000 && error.keyPattern.email) {
-          return res.status(400).json({ message: "Email address already exists." })
-        }
-        throw error
+      const existingEmail = await User.findOne({
+        email,
+        _id: { $ne: user._id } // exclude current user
+      })
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email address already exists." })
       }
+
+      user.email = email
     }
 
-    // Update password if provided
+    // 4️⃣ Update password if provided
     if (password) {
       if (password.length < 8) {
         return res.status(400).json({ message: "Password must be at least 8 characters." })
@@ -288,11 +288,23 @@ module.exports.updateUser = async (req, res) => {
       user.password = await bcrypt.hash(password, salt)
     }
 
-    // Update admin status if boolean
+    // 5️⃣ Update admin status if boolean
     if (typeof isAdmin === "boolean") {
       user.isAdmin = isAdmin
     }
 
+    // 6️⃣ Save all changes in a single try…catch to catch any duplicate errors
+    try {
+      await user.save()
+    } catch (error) {
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0] // 'email' or 'username'
+        return res.status(400).json({ message: `${field} already exists.` })
+      }
+      throw error
+    }
+
+    // 7️⃣ Return updated user
     return res.status(200).json({
       message: "User updated successfully.",
       user: {
