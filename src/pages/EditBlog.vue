@@ -154,7 +154,7 @@
                     <strong v-else>Unknown</strong>
                     <small class="text-muted ms-2">{{ formatDate(comment.createdAt) || 'Unknown Date' }}</small>
                   </p>
-                  <p class="mb-0">{{ comment.comment }}</p>
+                  <p class="mb-0"><em>{{ comment.comment }}</em></p>
 
                   <p v-if="auth.isAdmin" class="mt-3 mb-0">
                     <a href="#" class="text-danger text-decoration-none" @click.prevent="deleteComment(comment._id)">
