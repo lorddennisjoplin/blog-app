@@ -132,7 +132,9 @@ const pageTitle = computed(() => {
   }
 
   // Viewing someone else's profile
-  return `${route.params.username}'s Posts`
+  const username = route.params.username
+  const suffix = username.toLowerCase().endsWith('s') ? "'" : "'s"
+  return `${username}${suffix} Posts`
 })
 
 // Helper to format dates
