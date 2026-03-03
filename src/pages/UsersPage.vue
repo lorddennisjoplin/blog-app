@@ -217,7 +217,21 @@ const fetchUsers = async () => {
   loading.value = true
   try {
     const res = await api.get('/users/all')
-    users.value = res.data.users || []
+    const fetchedUsers = res.data.users || []
+
+    // Preserve your post count fetching
+    const usersWithPostCount = await Promise.all(
+      fetchedUsers.map(async (user) => {
+        try {
+          const postRes = await api.get(`/posts/user/${user.username}`)
+          return { ...user, postCount: postRes.data.blogs?.length || 0 }
+        } catch {
+          return { ...user, postCount: 0 }
+        }
+      })
+    )
+
+    users.value = usersWithPostCount
   } catch (err) {
     message.value = 'Failed to fetch users.'
     messageType.value = 'error'
@@ -232,7 +246,7 @@ const fetchUsers = async () => {
 const loadUserForEdit = async (id) => {
   try {
     const res = await api.get(`/users/profile/${id}`)
-    const user = res.data.user
+    const user = res.data.data
 
     editForm._id = user._id
     editForm.username = user.username
@@ -242,7 +256,7 @@ const loadUserForEdit = async (id) => {
     isEditing.value = true
     showForm.value = false
   } catch (err) {
-    message.value = 'Failed to load user.'
+    message.value = err.response?.data?.message || 'Failed to load user.'
     messageType.value = 'error'
   }
 }
@@ -252,24 +266,34 @@ const loadUserForEdit = async (id) => {
 ========================= */
 const handleEditUser = async () => {
   try {
-    const res = await api.put(`/users/edit/${editForm._id}`, editForm)
+    const res = await api.patch(`/users/edit/${editForm._id}`, editForm)
 
-    message.value = 'User updated successfully.'
+    message.value = 'User updated successfully. Redirecting...'
     messageType.value = 'success'
+
+    setTimeout(() => {
+	    message.value = ''
+	  }, 2000)
 
     await fetchUsers()
     cancelEdit()
+
   } catch (err) {
     message.value = err.response?.data?.message || 'Update failed.'
     messageType.value = 'error'
+
+    setTimeout(() => {
+	    message.value = ''
+	  }, 2000)
   }
 }
 
 const cancelEdit = () => {
-  isEditing.value = false
-  router.push('/users')
+  // Keep the edit form visible for 2 seconds
+	message.value = ''
+	isEditing.value = false
+	router.push('/users')
 }
-
 /* =========================
    ADD USER
 ========================= */

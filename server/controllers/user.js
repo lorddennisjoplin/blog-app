@@ -250,7 +250,7 @@ module.exports.updateUser = async (req, res) => {
     }
 
     if (username && username !== user.username) {
-      const existingUsername = await User.findOne({ username })
+      const existingUsername = await User.findOne({ username, _id: { $ne: userId } })
       if (existingUsername) {
         return res.status(400).json({ message: "Username already taken." })
       }
@@ -262,7 +262,7 @@ module.exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
-      const existingEmail = await User.findOne({ email })
+      const existingEmail = await User.findOne({ email, _id: { $ne: userId } })
       if (existingEmail) {
         return res.status(400).json({ message: "Email address already exists." })
       }
