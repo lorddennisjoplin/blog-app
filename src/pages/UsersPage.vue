@@ -158,13 +158,12 @@
 	                  </button>
 	              </router-link>
 
-                  <button
-                    v-if="auth.user._id !== user._id"
-                    class="btn btn-sm btn-danger"
-                    @click="DeleteUser(user._id)"
-                  >
-                    Delete
-                  </button>
+                  <button 
+					  v-if="auth.user._id !== user._id" 
+					  class="btn btn-sm btn-danger" 
+					  @click="DeleteUser(user)">
+					  Delete
+					</button>
                 </td>
               </tr>
             </tbody>
