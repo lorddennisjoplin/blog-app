@@ -273,8 +273,8 @@ module.exports.updateUser = async (req, res) => {
       
       const existingEmail = await User.findOne({
         email: { $regex: `^${emailNormalized}$`, $options: 'i' },
-        _id: { $ne: user._id } // do NOT wrap with mongoose.Types.ObjectId(user._id) if user._id is already an ObjectId
-      });
+        _id: { $nin: [user._id] } // safer than $ne in combination with regex
+      })
 
       if (existingEmail) {
         return res.status(400).json({ message: "Email address already exists." });
