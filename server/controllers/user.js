@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const auth = require('../auth.js');
 
 const { errorHandler } = require('../auth');
-const mongoose = require('mongoose');
 
 module.exports.registerUser = async (req, res) => {
   try {
@@ -270,11 +269,11 @@ module.exports.updateUser = async (req, res) => {
       }
 
       const emailNormalized = email.trim().toLowerCase();
-      
+
       const existingEmail = await User.findOne({
         email: { $regex: `^${emailNormalized}$`, $options: 'i' },
-        _id: { $nin: [user._id] } // safer than $ne in combination with regex
-      })
+        _id: { $ne: user._id }
+      });
 
       if (existingEmail) {
         return res.status(400).json({ message: "Email address already exists." });
