@@ -129,6 +129,10 @@ module.exports.updateProfile = async (req, res) => {
     const usernameNormalized = username.trim().toLowerCase();
     const emailNormalized = email.trim().toLowerCase();
 
+    // Fetch current user
+    const currentUser = await User.findById(req.user.id).select("username email password");
+    if (!currentUser) return res.status(404).json({ message: "User not found." });
+
     // Case-insensitive uniqueness checks excluding current user
     const usernameExists = await User.findOne({
       username: { $regex: `^${usernameNormalized}$`, $options: 'i' },
@@ -166,7 +170,17 @@ module.exports.updateProfile = async (req, res) => {
       { new: true }
     ).select("-password");
 
-    return res.status(200).json({ user: updatedUser });
+    // Determine if any critical field changed
+    const criticalChange =
+      currentUser.username !== usernameNormalized ||
+      currentUser.email !== emailNormalized ||
+      (password && password.length >= 8); // password is being updated
+
+    // Return updated user + logout flag
+    return res.status(200).json({
+      user: updatedUser,
+      logout: criticalChange // frontend should log out if true
+    });
 
   } catch (error) {
     return errorHandler(error, req, res);
