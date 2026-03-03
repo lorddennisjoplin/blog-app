@@ -2,7 +2,7 @@
   <div class="container my-5" style="max-width: 600px;">
     <h1 class="mb-4">My Profile</h1>
 
-    <div v-if="loading" class="alert alert-info">Loading...</div>
+    <div v-if="loading" class="mb-3 py-2 alert alert-info">Loading profile...</div>
 
     <div v-else>
 
