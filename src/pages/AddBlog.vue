@@ -190,7 +190,7 @@ const handleAddBlog = async () => {
 
     setTimeout(() => {
       router.push(`/posts/view/${newBlog._id}`)
-    }, 1500)
+    }, 1000)
 
   } catch (err) {
     message.value = err.response?.data?.message || err.message

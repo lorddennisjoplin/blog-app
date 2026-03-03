@@ -346,7 +346,7 @@ const deleteBlog = async (id) => {
     })
 
     // Option 1: Redirect to user's posts page
-    router.push(auth.user?.username ? `/posts/user/${auth.user.username}` : '/posts/all')
+    router.push('/posts')
 
     // Option 2 (optional): show a toast/message before redirect
     // message.value = "Post deleted successfully."
