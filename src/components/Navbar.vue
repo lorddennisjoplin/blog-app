@@ -3,7 +3,7 @@
     <div class="container">
 
       <!-- Brand -->
-      <RouterLink class="navbar-brand" to="/" @click="closeMenu">
+      <RouterLink class="navbar-brand" to="/">
         Blog App
       </RouterLink>
 
@@ -24,29 +24,25 @@
           <template v-if="auth.isAuthenticated">
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/posts" @click="closeMenu">
+              <RouterLink class="nav-link" to="/posts">
                 <i class="bi bi-journal-text"></i> All Posts
               </RouterLink>
             </li>
 
             <li v-if="auth.user" class="nav-item">
-              <RouterLink
-                class="nav-link"
-                :to="`/posts/user/${auth.user.username}`"
-                @click="closeMenu"
-              >
+              <RouterLink class="nav-link" :to="`/posts/user/${auth.user.username}`">
                 <i class="bi bi-pencil"></i> My Posts
               </RouterLink>
             </li>
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/posts/add" @click="closeMenu">
+              <RouterLink class="nav-link" to="/posts/add">
                 <i class="bi bi-plus-circle"></i> Add Post
               </RouterLink>
             </li>
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/profile" @click="closeMenu">
+              <RouterLink class="nav-link" to="/profile">
                 <i class="bi bi-person"></i> My Profile
               </RouterLink>
             </li>
@@ -63,13 +59,13 @@
           <template v-else>
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/login" @click="closeMenu">
+              <RouterLink class="nav-link" to="/login">
                 <i class="bi bi-lock"></i> Log in
               </RouterLink>
             </li>
 
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/register" @click="closeMenu">
+              <RouterLink class="nav-link" to="/register">
                 <i class="bi bi-pencil-square"></i> Register
               </RouterLink>
             </li>
@@ -83,21 +79,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 
 const auth = useUserStore()
 const router = useRouter()
-const isOpen = ref(false) // controls mobile menu
+const isOpen = ref(false)
 
-const closeMenu = () => {
-  isOpen.value = false
-}
+// Collapse menu automatically on route change
+watch(
+  () => router.currentRoute.value.fullPath,
+  () => {
+    isOpen.value = false
+  }
+)
 
 const logout = () => {
   auth.logout()
   router.push('/login')
-  closeMenu()
+  isOpen.value = false
 }
 </script>
