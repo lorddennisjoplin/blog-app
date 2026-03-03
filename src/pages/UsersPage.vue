@@ -33,12 +33,12 @@
       </div>
 
       <form @submit.prevent="handleAddUser">
-        <input v-model="form.title" type="text" class="form-control mb-2" placeholder="Title" required />
-        <input v-model="form.director" type="text" class="form-control mb-2" placeholder="Director" required />
+        <input v-model="form.username" type="text" class="form-control mb-2" placeholder="Title" required />
+        <input v-model="form.email" type="text" class="form-control mb-2" placeholder="Director" required />
         <input v-model="form.year" type="text" class="form-control mb-2" placeholder="Year" pattern="\d{4}" title="Year must be 4 digits" required />
-        <textarea v-model="form.description" class="form-control mb-2" placeholder="Description" required></textarea>
-        <input v-model="form.genre" type="text" class="form-control mb-2" placeholder="Genre" required />
-        <input v-model="form.image" type="url" class="form-control mb-2" placeholder="Poster URL" />
+        <textarea v-model="form.isActive" class="form-control mb-2" placeholder="Description" required></textarea>
+        <input v-model="form.password" type="password" class="form-control mb-2" minlength="8" placeholder="Password (At least 8 characters)" required />
+         <input v-model="form.confirmPassword" type="password" class="form-control mb-3" minlength="8" placeholder="Confirm Password" required />
 
         <button type="submit" class="btn btn-sm btn-primary me-2" :disabled="adding">
           <span v-if="adding">
@@ -46,7 +46,7 @@
             Adding...
           </span>
           <span v-else>
-            Save
+            Add
           </span>
         </button>
 
@@ -206,7 +206,7 @@ const fetchUsers = async () => {
 const handleAddUser = async () => {
   try {
     adding.value = true
-    const res = await api.post('/users/addUser', form)
+    const res = await api.post('/users/register', form)
 
     users.value.unshift(res.data)
     currentPage.value = 1
@@ -232,7 +232,7 @@ const cancelForm = () => {
 }
 
 // Admin actions
-const editUser = (id) => router.push(`/users/user/${id}`)
+const editUser = (id) => router.push(`/user/${id}`)
 
 const DeleteUser = async (userId) => {
   try {
