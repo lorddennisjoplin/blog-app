@@ -201,6 +201,69 @@ module.exports.updateProfile = async (req, res) => {
   }
 };
 
+module.exports.updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params
+    const { username, email, password, isAdmin } = req.body
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: "User not found." })
+    }
+
+    if (username && username !== user.username) {
+      const existingUsername = await User.findOne({ username })
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken." })
+      }
+      user.username = username
+    }
+
+    if (email && email !== user.email) {
+      if (!email.includes("@")) {
+        return res.status(400).json({ message: "Invalid email format." })
+      }
+
+      const existingEmail = await User.findOne({ email })
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email address already exists." })
+      }
+
+      user.email = email
+    }
+
+    if (password) {
+      if (password.length < 8) {
+        return res.status(400).json({
+          message: "Password must be at least 8 characters."
+        })
+      }
+
+      const salt = await bcrypt.genSalt(10)
+      user.password = await bcrypt.hash(password, salt)
+    }
+
+    if (typeof isAdmin === "boolean") {
+      user.isAdmin = isAdmin
+    }
+
+    await user.save()
+
+    return res.status(200).json({
+      message: "User updated successfully.",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        isAdmin: user.isAdmin
+      }
+    })
+
+  } catch (error) {
+    return errorHandler(error, req, res)
+  }
+}
+
 module.exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
