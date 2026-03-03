@@ -252,7 +252,7 @@ module.exports.updateUser = async (req, res) => {
 
     // Update username if provided and different
     if (username && username !== user.username) {
-      const existingUsername = await User.findOne({ username, _id: { $ne: userId } })
+      const existingUsername = await User.findOne({ username, _id: { $ne: user._id } })
       if (existingUsername) {
         return res.status(400).json({ message: "Username already taken." })
       }
@@ -287,8 +287,16 @@ module.exports.updateUser = async (req, res) => {
       user.isAdmin = isAdmin
     }
 
-    // Save changes
-    await user.save()
+    // Save changes with duplicate handling
+    try {
+      await user.save()
+    } catch (error) {
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0] // 'email' or 'username'
+        return res.status(400).json({ message: `${field} already exists.` })
+      }
+      throw error
+    }
 
     return res.status(200).json({
       message: "User updated successfully.",
