@@ -115,6 +115,7 @@ module.exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Username and email are required." })
     }
 
+    // Username uniqueness check
     const usernameExists = await User.findOne({
       username,
       _id: { $ne: req.user.id }
@@ -124,19 +125,33 @@ module.exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Username already taken." })
     }
 
+    // Email uniqueness check
     const emailExists = await User.findOne({
       email,
       _id: { $ne: req.user.id }
     })
 
     if (emailExists) {
-      return res.status(400).json({ message: "Email already in use." })
+      return res.status(400).json({ message: "Email address already in use." })
+    }
+
+    // Basic email validation
+    if (!email.includes("@")) {
+      return res.status(400).json({
+        message: "Invalid email format."
+      })
     }
 
     const updateData = { username, email }
 
-    // Only update password if provided
+    // Only validate password IF it exists
     if (password) {
+      if (password.length < 8) {
+        return res.status(400).json({
+          message: "Password must be at least 8 characters."
+        })
+      }
+
       const hashedPassword = await bcrypt.hash(password, 10)
       updateData.password = hashedPassword
     }

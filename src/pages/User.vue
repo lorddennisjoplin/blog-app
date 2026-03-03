@@ -53,7 +53,7 @@
 		      v-model="form.password"
 		      type="password"
 		      class="form-control"
-		      minlength="6"
+		      minlength="8"
 		    />
 		  </div>
 
@@ -63,7 +63,7 @@
 		      v-model="form.confirmPassword"
 		      type="password"
 		      class="form-control"
-		      minlength="6"
+		      minlength="8"
 		    />
 		  </div>
 		</div>
@@ -103,7 +103,7 @@ const form = reactive({
 
 const fetchProfile = async () => {
   try {
-    const res = await api.get('/users/profile', {
+    const res = await api.get('/users/details', {
       headers: { Authorization: `Bearer ${auth.token}` }
     })
 
