@@ -265,7 +265,7 @@ module.exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
-      const existingEmail = await User.findOne({ email, _id: { $ne: userId } })
+      const existingEmail = await User.findOne({ email, _id: { $ne: user._id } })
       if (existingEmail) {
         return res.status(400).json({ message: "Email address already exists." })
       }
