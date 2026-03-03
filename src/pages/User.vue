@@ -1,6 +1,29 @@
 <template>
   <div class="container my-5">
-    <h1 class="mb-4">Edit Profile</h1>
+    <h1 class="mb-4">My Profile</h1>
+
+    <!-- User Details -->
+    <p><strong>Username:</strong> {{ auth.user?.username || '-' }}<br>
+    <strong>Email Address:</strong> {{ auth.user?.email || '-' }}</p>
+    <template v-if="postCount > 0">
+    	<RouterLink
+    	:to="`/posts/user/${auth.user?.username}`"
+    	class="text-decoration-none fw-bold"
+    	>
+    	<button class="btn btn-success">
+    		View {{ postCount }} Post{{ postCount > 1 ? 's' : '' }}
+    	</button>
+    </RouterLink>
+	</template>
+	<template v-else>
+		<RouterLink to="/posts/add">
+			<button class="btn btn-success">Add Post</button>
+		</RouterLink>
+	</template>
+
+    <hr class="my-4">
+
+    <h2 class="mb-4">Edit Profile</h2>
 
     <div v-if="message" :class="`alert mb-3 py-2 ${messageType === 'success' ? 'alert-success' : 'alert-danger'}`">
       {{ message }}
@@ -15,7 +38,7 @@
 
       <!-- Email -->
       <div class="mb-3">
-        <label class="form-label">Email</label>
+        <label class="form-label">Email Address</label>
         <input type="email" v-model="form.email" class="form-control" required />
       </div>
 
@@ -39,14 +62,14 @@
       </div>
 
       <button type="submit" class="btn btn-primary" :disabled="loading">
-		  {{ loading ? 'Saving...' : 'Save Changes' }}
-		</button>
+        {{ loading ? 'Saving...' : 'Save Changes' }}
+      </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import api from '../services/api.js'
 import { useUserStore } from '../stores/user.js'
 import { useRouter } from 'vue-router'
@@ -66,12 +89,15 @@ const message = ref('')
 const messageType = ref('success')
 const loading = ref(false)
 
-// Load current user data on mount
+const postCount = ref(0)
+
+// Load current user data and post count
 onMounted(async () => {
   try {
     if (auth.user) {
       form.username = auth.user.username
       form.email = auth.user.email
+      await fetchPostCount()
       return
     }
 
@@ -82,16 +108,29 @@ onMounted(async () => {
       form.username = res.data.user.username
       form.email = res.data.user.email
       auth.setUser(res.data.user)
+      await fetchPostCount()
       return
     }
 
-    router.push('/login') // Only redirect if no token
+    router.push('/login') // redirect if no token
   } catch (err) {
     console.error(err)
     auth.logout()
     router.push('/login')
   }
 })
+
+// Fetch number of posts for the user
+const fetchPostCount = async () => {
+  try {
+    const res = await api.get(`/posts/user/${auth.user.username}`)
+    postCount.value = res.data.blogs?.length || 0
+  } catch (err) {
+    console.error("Failed to fetch post count:", err)
+    postCount.value = 0
+  }
+}
+
 
 // Save profile function
 const saveProfile = async () => {
@@ -101,7 +140,6 @@ const saveProfile = async () => {
     return;
   }
 
-  // Password confirmation check
   if (updatePassword.value && form.password !== form.confirmPassword) {
     message.value = "Passwords do not match.";
     messageType.value = "error";
@@ -112,31 +150,29 @@ const saveProfile = async () => {
     loading.value = true;
 
     const res = await api.patch(
-      '/users/profile', // PATCH matches backend route
+      '/users/profile',
       {
         username: form.username,
         email: form.email,
         password: updatePassword.value ? form.password : undefined
       },
-      {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      }
+      { headers: { Authorization: `Bearer ${auth.token}` } }
     );
 
     message.value = "Profile updated successfully. Please log in again.";
     messageType.value = "success";
 
     setTimeout(() => {
-      auth.logout();         // clear user data
-      router.push('/login'); // redirect to login
-    }, 2500);
+      auth.logout()
+      router.push('/login')
+    }, 2000);
 
   } catch (err) {
-    console.error(err);
-    message.value = err.response?.data?.message || "Failed to update profile.";
-    messageType.value = "error";
+    console.error(err)
+    message.value = err.response?.data?.message || "Failed to update profile."
+    messageType.value = "error"
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 </script>
