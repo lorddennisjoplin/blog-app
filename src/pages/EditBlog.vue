@@ -164,7 +164,7 @@
                 </div>
               </div>
               <div v-else class="text-muted">
-                <p>No comments yet. Be the first to comment!</p>
+                <p>Be the first to comment!</p>
               </div>
             </div>
           </div>
