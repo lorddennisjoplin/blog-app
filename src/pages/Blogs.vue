@@ -139,7 +139,10 @@
                 Commented
                 "{{ stripAndTruncate(comment.content, 150) }}"
                 on
-                <RouterLink :to="`/posts/view/${comment.post._id}`" class="text-decoration-none">
+                <RouterLink 
+                  :to="{ path: `/posts/view/${comment.post._id}`, hash: '#comments' }" 
+                  class="text-decoration-none"
+                >
                   {{ comment.post.title }}
                 </RouterLink>
               </p>
