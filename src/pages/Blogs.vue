@@ -4,7 +4,7 @@
 
     <div class="row">
       <!-- Main content: 80% -->
-      <div class="col-md-9">
+      <div class="col-md-9 mb-5 mb-lg-0">
         <div v-if="loading" class="alert alert-info py-2">Loading posts...</div>
 
         <div v-else>
@@ -107,7 +107,7 @@
 
       <!-- Sidebar: 20% -->
       <div class="col-md-3">
-        <div class="px-3">
+        <div class="px-0 px-lg-3">
           <h3 class="mb-3">Join the Discussion</h3>
 
           <div v-if="latestComments.length === 0" class="text-muted">
