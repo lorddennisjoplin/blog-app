@@ -12,6 +12,6 @@ router.patch("/profile", verify, userController.updateProfile)
 router.get("/profile/:userId", verify, verifyAdmin, userController.getUserDetails)
 router.patch("/edit/:userId", verify, verifyAdmin, userController.updateUser)
 router.get("/all", verify, verifyAdmin, userController.allUsers)
-router.delete("/delete", verify, verifyAdmin, userController.deleteUser)
+router.delete("/delete/:userId", verify, verifyAdmin, userController.deleteUser)
 
 module.exports = router;

@@ -121,6 +121,7 @@
                 <th class="text-center">Username</th>
                 <th class="text-center">Email</th>
                 <th class="text-center">Posts</th>
+                <th class="text-center">Role</th>
                 <th class="text-center">Actions</th>
               </tr>
             </thead>
@@ -136,7 +137,7 @@
                     {{ user.postCount || 0 }}
                   </router-link>
                 </td>
-
+                <td class="text-center">{{ user.isAdmin ? 'Admin' : 'User' }}</td>
                 <td class="text-center">
                   <button
                     v-if="auth.user._id !== user._id"
@@ -339,9 +340,10 @@ const editUser = (id) => {
   router.push(`/users/edit/${id}`)
 }
 
-const DeleteUser = async (userId) => {
-  if (!confirm('Are you sure?')) return
-  await api.delete(`/users/deleteUser/${userId}`)
+const DeleteUser = async (user) => {
+  if (!confirm(`Are you sure you want to delete ${user.username}? This action cannot be undone.`)) return
+
+  await api.delete(`/users/delete/${user._id}`)
   await fetchUsers()
 }
 
