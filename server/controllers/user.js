@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const auth = require('../auth.js');
 
 const { errorHandler } = require('../auth');
+const mongoose = require('mongoose');
 
 module.exports.registerUser = async (req, res) => {
   try {
@@ -268,15 +269,19 @@ module.exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
+      const emailNormalized = email.trim().toLowerCase();
+
       const existingEmail = await User.findOne({
-        email,
-        _id: { $ne: user._id } // exclude current user
-      })
+        email: { $regex: `^${emailNormalized}$`, $options: 'i' },
+        _id: { $ne: mongoose.Types.ObjectId(user._id) } // ensure proper ObjectId comparison
+      });
+
       if (existingEmail) {
-        return res.status(400).json({ message: "Email address already exists." })
+        return res.status(400).json({ message: "Email address already exists." });
       }
 
-      user.email = email
+      // assign normalized email
+      user.email = emailNormalized;
     }
 
     // 4️⃣ Update password if provided
