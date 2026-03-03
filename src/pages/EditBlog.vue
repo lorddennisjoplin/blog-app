@@ -171,7 +171,7 @@
                     style="max-width: 100%; object-fit: cover;"
                   />
                   <h4
-                    class="mt-2"
+                    class="mt-2 text-dark"
                     :class="index === latestPosts.length - 1 ? 'mb-0' : 'mb-4'"
                   >
                     {{ post.title }}
