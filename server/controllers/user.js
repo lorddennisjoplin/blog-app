@@ -4,8 +4,6 @@ const auth = require('../auth.js');
 
 const { errorHandler } = require('../auth');
 
-const mongoose = require('mongoose')
-
 module.exports.registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -246,21 +244,15 @@ module.exports.updateUser = async (req, res) => {
     const { userId } = req.params
     const { username, email, password, isAdmin } = req.body
 
-    // Convert userId to ObjectId for safe comparison
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID." })
-    }
-    const objectUserId = mongoose.Types.ObjectId(userId)
-
     // Fetch user to update
-    const user = await User.findById(objectUserId)
+    const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found." })
     }
 
     // Update username if provided and different
     if (username && username !== user.username) {
-      const existingUsername = await User.findOne({ username, _id: { $ne: objectUserId } })
+      const existingUsername = await User.findOne({ username, _id: { $ne: userId } })
       if (existingUsername) {
         return res.status(400).json({ message: "Username already taken." })
       }
@@ -273,7 +265,7 @@ module.exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: "Invalid email format." })
       }
 
-      const existingEmail = await User.findOne({ email, _id: { $ne: objectUserId } })
+      const existingEmail = await User.findOne({ email, _id: { $ne: userId } })
       if (existingEmail) {
         return res.status(400).json({ message: "Email address already exists." })
       }
@@ -309,6 +301,7 @@ module.exports.updateUser = async (req, res) => {
     })
 
   } catch (error) {
+    console.error("Update user error:", error)
     return errorHandler(error, req, res)
   }
 }
