@@ -21,9 +21,21 @@
 		</RouterLink>
 	</template>
 
+  <button
+    :class="[
+      'btn ms-2',
+      isEditing ? 'btn-secondary' : 'btn-primary'
+    ]"
+    @click="isEditing = !isEditing"
+  >
+    {{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
+  </button>
+
+  <div v-if="isEditing">
+
     <hr class="my-4">
 
-    <h2 class="mb-4">Edit Profile</h2>
+    <h2 class="mb-3">Edit Profile</h2>
 
     <div v-if="message" :class="`alert mb-3 py-2 ${messageType === 'success' ? 'alert-success' : 'alert-danger'}`">
       {{ message }}
@@ -66,6 +78,8 @@
       </button>
     </form>
   </div>
+
+  </div>
 </template>
 
 <script setup>
@@ -88,6 +102,7 @@ const updatePassword = ref(false)
 const message = ref('')
 const messageType = ref('success')
 const loading = ref(false)
+const isEditing = ref(false)
 
 const postCount = ref(0)
 

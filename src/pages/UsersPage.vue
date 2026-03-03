@@ -5,79 +5,18 @@
     </h1>
 
     <!-- ADMIN ACTION BUTTON -->
-    <div v-if="auth.isAdmin && !isEditing" class="mb-3">
+    <div v-if="auth.isAdmin && !isEditing" class="mb-4">
       <button class="btn btn-primary me-2" @click="showForm = !showForm">
         Add User
       </button>
     </div>
 
-    <!-- ALERT MESSAGE -->
-    <div
-      v-if="message"
-      :class="[
-        'alert py-2',
-        messageType === 'success' ? 'alert-success' : 'alert-danger'
-      ]"
-    >
-      {{ message }}
-    </div>
+    <div v-if="loading" class="alert alert-info py-2">Loading users...</div>
 
-    <!-- ===================== -->
-    <!-- EDIT USER FORM -->
-    <!-- ===================== -->
-    <div v-if="isEditing" class="card p-3 my-3">
-      <h2 class="mb-3">Edit User</h2>
-
-      <form @submit.prevent="handleEditUser">
-        <input
-          v-model="editForm.username"
-          type="text"
-          class="form-control mb-2"
-          placeholder="Username"
-          required
-        />
-
-        <input
-          v-model="editForm.email"
-          type="text"
-          class="form-control mb-2"
-          placeholder="Email Address"
-          required
-        />
-
-        <div class="form-check mb-3" v-if="auth.isAdmin">
-          <input
-            v-model="editForm.isAdmin"
-            type="checkbox"
-            class="form-check-input"
-            id="editIsAdminCheckbox"
-          />
-          <label class="form-check-label" for="editIsAdminCheckbox">
-            Admin
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-sm btn-primary me-2">
-          Update
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-sm btn-secondary"
-          @click="cancelEdit"
-        >
-          Cancel
-        </button>
-      </form>
-    </div>
-
-    <!-- ===================== -->
     <!-- ADD USER FORM -->
-    <!-- ===================== -->
     <div
-      v-if="showForm && auth.isAdmin && !isEditing"
-      class="card p-3 my-3"
-    >
+      v-else-if="showForm && auth.isAdmin && !isEditing"
+      class="card p-3 my-3">
       <h2 class="mb-3">Add User</h2>
 
       <form @submit.prevent="handleAddUser">
@@ -107,13 +46,22 @@
       </form>
     </div>
 
-    <!-- ===================== -->
     <!-- USERS TABLE -->
-    <!-- ===================== -->
-    <div v-if="!isEditing" class="mt-4">
-      <div v-if="loading" class="alert alert-info py-2">Loading users...</div>
+    <div v-else-if="!isEditing" class="mt-3">
+      
 
-      <div v-else-if="paginatedUsers.length && auth.isAdmin">
+      <div v-if="paginatedUsers.length && auth.isAdmin">
+
+      	<div
+	      v-if="message"
+	      :class="[
+	        'alert py-2',
+	        messageType === 'success' ? 'alert-success' : 'alert-danger'
+	      ]"
+	    >
+	      {{ message }}
+	    </div>
+
         <div class="table-responsive">
           <table class="table table-bordered">
             <thead class="table-light">
@@ -171,8 +119,103 @@
         </div>
       </div>
 
-      <div v-else class="alert alert-warning">No users found.</div>
+      <div v-else class="alert alert-warning py-2">No users found.</div>
     </div>
+
+    <!-- EDIT USER FORM -->
+    <div v-else-if="isEditing" class="card p-3 my-3">
+	  <div
+	    v-if="message"
+	    :class="[
+	      'alert py-2',
+	      messageType === 'success' ? 'alert-success' : 'alert-danger'
+	    ]"
+	  >
+	    {{ message }}
+	  </div>
+
+	  <form @submit.prevent="handleEditUser">
+	    <!-- Username -->
+	    <label>Username</label>
+	    <input
+	      v-model="editForm.username"
+	      type="text"
+	      class="form-control mb-2"
+	      placeholder="Username"
+	      required
+	    />
+
+	    <!-- Email -->
+	    <label>Email Address</label>
+	    <input
+	      v-model="editForm.email"
+	      type="text"
+	      class="form-control mb-3"
+	      placeholder="Email Address"
+	      required
+	    />
+
+	    <!-- Admin checkbox -->
+	    <div class="form-check mb-3" v-if="auth.isAdmin">
+	      <input
+	        v-model="editForm.isAdmin"
+	        type="checkbox"
+	        class="form-check-input"
+	        id="editIsAdminCheckbox"
+	      />
+	      <label class="form-check-label" for="editIsAdminCheckbox">
+	        Admin
+	      </label>
+	    </div>
+
+	    <!-- Update Password checkbox -->
+	    <div class="form-check mb-3">
+		  <input
+		    type="checkbox"
+		    class="form-check-input"
+		    id="updatePasswordCheckbox"
+		    v-model="editForm.updatePassword"
+		  />
+		  <label class="form-check-label" for="updatePasswordCheckbox">
+		    Update Password?
+		  </label>
+		</div>
+
+	    <!-- Password fields, visible only if checkbox is ticked -->
+	    <div v-if="editForm.updatePassword">
+	      <label>New Password</label>
+	      <input
+	        v-model="editForm.password"
+	        type="password"
+	        class="form-control mb-2"
+	        placeholder="New Password"
+	        minlength="8"
+	      />
+
+	      <label>Confirm Password</label>
+	      <input
+	        v-model="editForm.confirmPassword"
+	        type="password"
+	        class="form-control mb-3"
+	        placeholder="Confirm Password"
+	        minlength="8"
+	      />
+	    </div>
+
+	    <!-- Buttons -->
+	    <button type="submit" class="btn btn-sm btn-primary me-2">
+	      Update
+	    </button>
+
+	    <button
+	      type="button"
+	      class="btn btn-sm btn-secondary"
+	      @click="cancelEdit"
+	    >
+	      Cancel
+	    </button>
+	  </form>
+	</div>
   </div>
 </template>
 
@@ -191,20 +234,25 @@ const message = ref('')
 const messageType = ref('success')
 const adding = ref(false)
 const isEditing = ref(false)
+const updatePassword = ref(false)
 
 const form = reactive({
   username: '',
   email: '',
   password: '',
   confirmPassword: '',
-  isAdmin: false
+  isAdmin: false,
+  updatePassword: false
 })
 
 const editForm = reactive({
   _id: '',
   username: '',
   email: '',
-  isAdmin: false
+  isAdmin: false,
+  updatePassword: false,
+  password: '',
+  confirmPassword: '',
 })
 
 const users = ref([])
@@ -264,6 +312,10 @@ const loadUserForEdit = async (id) => {
     editForm.email = user.email
     editForm.isAdmin = user.isAdmin
 
+    editForm.updatePassword = false
+    editForm.password = ''
+    editForm.confirmPassword = ''
+
     isEditing.value = true
     showForm.value = false
   } catch (err) {
@@ -277,25 +329,45 @@ const loadUserForEdit = async (id) => {
 ========================= */
 const handleEditUser = async () => {
   try {
-    const res = await api.patch(`/users/edit/${editForm._id}`, editForm)
+    if (editForm.updatePassword) {
+      // Check both fields are filled
+      if (!editForm.password || !editForm.confirmPassword) {
+        message.value = "Password cannot be blank."
+        messageType.value = "error"
+        setTimeout(() => { message.value = '' }, 2000)
+        return
+      }
+
+      // Check they match
+      if (editForm.password !== editForm.confirmPassword) {
+        message.value = "Passwords do not match."
+        messageType.value = "error"
+        setTimeout(() => { message.value = '' }, 2000)
+        return
+      }
+    } else {
+      // If not updating password, remove it from payload
+      editForm.password = ''
+      editForm.confirmPassword = ''
+    }
+
+    await api.patch(`/users/edit/${editForm._id}`, editForm)
 
     message.value = 'User updated successfully. Redirecting...'
     messageType.value = 'success'
 
     setTimeout(() => {
-	    message.value = ''
-	  }, 2000)
-
-    await fetchUsers()
-    cancelEdit()
+      message.value = ''
+      router.push('/users')
+    }, 2000)
 
   } catch (err) {
     message.value = err.response?.data?.message || 'Update failed.'
     messageType.value = 'error'
 
     setTimeout(() => {
-	    message.value = ''
-	  }, 2000)
+      message.value = ''
+    }, 2000)
   }
 }
 
@@ -316,6 +388,10 @@ const handleAddUser = async () => {
     cancelForm()
     message.value = 'User added successfully.'
     messageType.value = 'success'
+
+    setTimeout(() => {
+	    message.value = ''
+	  }, 2000)
   } catch (err) {
     message.value = err.response?.data?.message || err.message
     messageType.value = 'error'
@@ -340,10 +416,17 @@ const editUser = (id) => {
 }
 
 const DeleteUser = async (user) => {
-  if (!confirm(`Are you sure you want to delete ${user.username}? This action cannot be undone.`)) return
+	if (!confirm(`Are you sure you want to delete ${user.username}? This action cannot be undone.`)) return
 
-  await api.delete(`/users/delete/${user._id}`)
-  await fetchUsers()
+		await api.delete(`/users/delete/${user._id}`)
+	await fetchUsers()
+
+	message.value = 'User deleted successfully.'
+	messageType.value = 'success'
+
+	setTimeout(() => {
+		message.value = ''
+	}, 2000)
 }
 
 /* =========================
@@ -357,6 +440,8 @@ watch(
   },
   { immediate: true }
 )
+
+watch(() => route.fullPath, fetchUsers)
 
 onMounted(fetchUsers)
 </script>
