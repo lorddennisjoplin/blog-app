@@ -8,13 +8,19 @@
         <div v-if="loading" class="alert alert-info py-2">Loading posts...</div>
 
         <div v-else>
-          <div v-if="blogs.length === 0" class="alert alert-warning py-2">
+          <div v-if="blogs.length === 0">
             <template v-if="isUserPage">
-              No posts found for this user.
+              <div class="alert alert-warning py-2">
+                No posts found for this user.
+              </div>
             </template>
             <template v-else>
-              No posts found.
+              <div class="alert alert-warning py-2">
+                No posts found.
+              </div>
             </template>
+
+            <img src="https://i.imgur.com/OugysX6.png" alt="Still writing..." class="img-fluid" border="0">
           </div>
 
           <div v-else>
