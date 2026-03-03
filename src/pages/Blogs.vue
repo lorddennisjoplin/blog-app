@@ -75,12 +75,12 @@
               </div>
 
               <div class="col-12">
-                <hr class="mt-4" />
+                <hr class="my-4" />
               </div>
             </div>
 
             <!-- Pagination -->
-            <div v-if="totalPages > 1" class="mt-4 mb-5">
+            <div v-if="totalPages > 1" class="my-5">
               <nav>
                 <ul class="pagination justify-content-center">
                   <li class="page-item" :class="{ disabled: currentPage === 1 }">
