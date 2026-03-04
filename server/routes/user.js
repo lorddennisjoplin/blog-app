@@ -6,6 +6,7 @@ const { verify, verifyAdmin } = auth;
 const router = express.Router();
 
 router.post("/register", userController.registerUser);
+router.get("/available/:username", userController.checkUserExists);
 router.post("/login", userController.loginUser);
 router.get("/details", verify, userController.getProfile);
 router.patch("/profile", verify, userController.updateProfile)

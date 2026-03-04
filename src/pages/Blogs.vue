@@ -250,27 +250,48 @@ const paginatedBlogs = computed(() => {
 const fetchBlogs = async () => {
   loading.value = true
   try {
-    let url = username.value ? `/posts/user/${username.value}` : '/posts/all'
-    const res = await api.get(url)
-    let fetched = res.data.blogs || []
-    fetched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    blogs.value = fetched.map(blog => ({ ...blog, formattedDate: formatDate(blog.createdAt) }))
+    if (username.value) {
+      // Check if user exists first
+      await api.get(`/users/available/${username.value}`)
+
+      // Then fetch posts for that user
+      const res = await api.get(`/posts/user/${username.value}`)
+      let fetched = res.data.blogs || []
+
+      fetched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      blogs.value = fetched.map(blog => ({
+        ...blog,
+        formattedDate: formatDate(blog.createdAt)
+      }))
+
+    } else {
+      // Fetch all posts if no username
+      const res = await api.get('/posts/all')
+      let fetched = res.data.blogs || []
+
+      fetched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      blogs.value = fetched.map(blog => ({
+        ...blog,
+        formattedDate: formatDate(blog.createdAt)
+      }))
+    }
+
     message.value = ''
   }
   catch (err) {
     console.error(err)
-
     blogs.value = []
 
     if (err.response?.status === 404) {
-      message.value = err.response.data.message
+      // This will trigger if the user check fails
+      message.value = err.response.data.message // "User not found"
       messageType.value = "warning"
     } else {
       message.value = "Failed to fetch posts."
       messageType.value = "error"
     }
-
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }

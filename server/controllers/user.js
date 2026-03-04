@@ -61,6 +61,21 @@ module.exports.registerUser = async (req, res) => {
   }
 };
 
+module.exports.checkUserExists = async (req, res) => {
+  try {
+    const username = req.params.username
+    const user = await User.findOne({ username }).select("_id")
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." })
+    }
+
+    return res.status(200).json({ message: "User exists" })
+  } catch (error) {
+    return errorHandler(error, req, res)
+  }
+}
+
 module.exports.loginUser = async (req, res) => {
   try {
     const { identifier, password } = req.body;
