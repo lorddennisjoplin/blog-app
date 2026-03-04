@@ -20,7 +20,12 @@
               </div>
             </template>
 
-            <img src="https://i.imgur.com/OugysX6.png" alt="Still writing..." class="img-fluid" border="0">
+            <p><img src="https://i.imgur.com/rU9swVr.jpeg" alt="No posts found" class="img-fluid" border="0" width="200"></p>
+
+            <RouterLink to="/posts/add">
+              <button class="btn btn-success">Create First Post</button>
+            </RouterLink>
+
           </div>
 
           <div v-else>
