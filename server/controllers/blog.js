@@ -79,6 +79,7 @@ module.exports.getUserBlogPosts = (req, res) => {
     return res.status(400).json({ message: 'Username is required.' })
   }
 
+  // First, get all blogs with populated authors
   Blog.find({})
     .populate('author', 'username email')
     .then(blogs => {
@@ -88,16 +89,20 @@ module.exports.getUserBlogPosts = (req, res) => {
       )
 
       if (userBlogs.length > 0) {
+        // User has posts → return them
         return res.status(200).json({ blogs: userBlogs })
       }
 
-      // Check if user exists at all
+      // User has no posts, but does the user exist at all?
       const userExists = blogs.some(blog => blog.author && blog.author.username === username)
+
       if (!userExists) {
-        return res.status(404).json({ message: 'User not found.' })
+        // Optional: If you have a User collection, you could query it here instead
+        return res.status(200).json({ blogs: [] }) // safer than 404
       }
 
-      return res.status(404).json({ message: 'No posts found for this user.' })
+      // User exists but has no posts
+      return res.status(200).json({ blogs: [] })
     })
     .catch(error => errorHandler(error, req, res))
 }
