@@ -22,7 +22,7 @@
 
             <p><img src="https://i.imgur.com/rU9swVr.jpeg" alt="No posts found" class="img-fluid" border="0" width="200"></p>
 
-            <RouterLink to="/posts/add">
+            <RouterLink to="/posts/add" v-if="isUserPage && auth.user?.username === route.params.username">
               <button class="btn btn-success">Create First Post</button>
             </RouterLink>
 
