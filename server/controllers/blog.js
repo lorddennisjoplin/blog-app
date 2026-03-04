@@ -80,14 +80,14 @@ module.exports.getUserBlogPosts = async (req, res) => {
       return res.status(400).json({ message: 'Username is required.' })
     }
 
-    // 1️⃣ Check if user exists
+    // Check if user exists
     const user = await User.findOne({ username })
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' })
     }
 
-    // 2️⃣ Get blogs for that user
+    // Get blogs for that user
     const blogs = await Blog.find({ author: user._id })
       .populate('author', 'username email')
 
