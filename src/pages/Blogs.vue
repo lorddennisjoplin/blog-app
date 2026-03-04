@@ -8,7 +8,10 @@
         <div v-if="loading" class="alert alert-info py-2">Loading posts...</div>
 
         <div v-else>
-          <div v-if="blogs.length === 0">
+          <div v-if="message && messageType === 'warning'" class="alert alert-warning py-2">
+            {{ message }}
+          </div>
+          <div v-else-if="blogs.length === 0">
             <template v-if="isUserPage && auth.user?.username === route.params.username">
               <div class="alert alert-warning py-2">
                 You haven't made any posts.

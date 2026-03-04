@@ -79,21 +79,25 @@ module.exports.getUserBlogPosts = (req, res) => {
     return res.status(400).json({ message: 'Username is required.' })
   }
 
-  User.findOne({ username })
-    .then(user => {
-      if (!user) {
+  Blog.find({})
+    .populate('author', 'username email')
+    .then(blogs => {
+      // Filter blogs for this username
+      const userBlogs = blogs.filter(
+        blog => blog.author && blog.author.username === username
+      )
+
+      if (userBlogs.length > 0) {
+        return res.status(200).json({ blogs: userBlogs })
+      }
+
+      // Check if user exists at all
+      const userExists = blogs.some(blog => blog.author && blog.author.username === username)
+      if (!userExists) {
         return res.status(404).json({ message: 'User not found.' })
       }
 
-      return Blog.find({ author: user._id })
-        .populate('author', 'username email')
-        .then(userBlogs => {
-          if (userBlogs.length > 0) {
-            return res.status(200).json({ blogs: userBlogs })
-          } else {
-            return res.status(404).json({ message: 'No posts found for this user.' })
-          }
-        })
+      return res.status(404).json({ message: 'No posts found for this user.' })
     })
     .catch(error => errorHandler(error, req, res))
 }
