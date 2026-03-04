@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container">
 
       <!-- Brand -->
@@ -107,3 +107,13 @@ const logout = () => {
   isOpen.value = false
 }
 </script>
+
+<style>
+	.navbar-nav li {
+		margin: 0 5px;
+	}
+
+	.navbar-nav li:last-child {
+		margin-right: 0;
+	}
+</style>
