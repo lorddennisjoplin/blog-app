@@ -72,34 +72,30 @@ module.exports.getAllBlogPosts = (req, res) => {
 }
 
 // Get all blog posts by a specific username
-module.exports.getUserBlogPosts = async (req, res) => {
-  try {
-    const username = req.params.username
+module.exports.getUserBlogPosts = (req, res) => {
+  const username = req.params.username
 
-    if (!username) {
-      return res.status(400).json({ message: 'Username is required.' })
-    }
-
-    // Check if user exists
-    const user = await User.findOne({ username })
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' })
-    }
-
-    // Get blogs for that user
-    const blogs = await Blog.find({ author: user._id })
-      .populate('author', 'username email')
-
-    if (blogs.length === 0) {
-      return res.status(404).json({ message: 'No posts found for this user.' })
-    }
-
-    return res.status(200).json({ blogs })
-
-  } catch (error) {
-    return errorHandler(error, req, res)
+  if (!username) {
+    return res.status(400).json({ message: 'Username is required.' })
   }
+
+  User.findOne({ username })
+    .then(user => {
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' })
+      }
+
+      return Blog.find({ author: user._id })
+        .populate('author', 'username email')
+        .then(userBlogs => {
+          if (userBlogs.length > 0) {
+            return res.status(200).json({ blogs: userBlogs })
+          } else {
+            return res.status(404).json({ message: 'No posts found for this user.' })
+          }
+        })
+    })
+    .catch(error => errorHandler(error, req, res))
 }
 
 module.exports.getBlogPostById = (req, res) => {

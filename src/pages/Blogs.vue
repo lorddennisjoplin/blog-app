@@ -247,22 +247,14 @@ const paginatedBlogs = computed(() => {
 const fetchBlogs = async () => {
   loading.value = true
   try {
-    let url = username.value
-      ? `/posts/user/${username.value}`
-      : '/posts/all'
-
+    let url = username.value ? `/posts/user/${username.value}` : '/posts/all'
     const res = await api.get(url)
-
     let fetched = res.data.blogs || []
     fetched.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-
-    blogs.value = fetched.map(blog => ({
-      ...blog,
-      formattedDate: formatDate(blog.createdAt)
-    }))
-
+    blogs.value = fetched.map(blog => ({ ...blog, formattedDate: formatDate(blog.createdAt) }))
     message.value = ''
-  } catch (err) {
+  }
+  catch (err) {
     console.error(err)
 
     blogs.value = []
